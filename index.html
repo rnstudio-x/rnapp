@@ -1045,6 +1045,65 @@
             }
         });
 
+
+        // Load data from Google Sheets
+function loadFromGoogleSheets() {
+    const url = localStorage.getItem('rn_studio_sheets_url');
+    if (!url) {
+        console.log('Google Sheets not configured');
+        return;
+    }
+    
+    // Create hidden iframe to get data
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.name = 'loadFrame';
+    document.body.appendChild(iframe);
+    
+    // Use form submission to get data
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = url;
+    form.target = 'loadFrame';
+    form.style.display = 'none';
+    
+    const actionInput = document.createElement('input');
+    actionInput.type = 'hidden';
+    actionInput.name = 'action';
+    actionInput.value = 'load';
+    form.appendChild(actionInput);
+    
+    document.body.appendChild(form);
+    form.submit();
+    
+    // Listen for data from iframe
+    iframe.onload = function() {
+        try {
+            const response = iframe.contentDocument.body.innerText;
+            if (response && response.includes('{')) {
+                const data = JSON.parse(response);
+                if (data.events && data.photographers) {
+                    events = data.events;
+                    photographers = data.photographers;
+                    localStorage.setItem('rn_studio_events', JSON.stringify(events));
+                    localStorage.setItem('rn_studio_photographers', JSON.stringify(photographers));
+                    updatePhotographerDropdown();
+                    updateDashboard();
+                    showNotification('Data loaded from Google Sheets!', 'success');
+                }
+            }
+        } catch (error) {
+            console.log('Error loading data from Google Sheets:', error);
+        }
+        
+        // Clean up
+        setTimeout(() => {
+            document.body.removeChild(form);
+            document.body.removeChild(iframe);
+        }, 1000);
+    };
+}
+        
         // Add keyboard shortcuts
         document.addEventListener('keydown', function(e) {
             if (e.ctrlKey || e.metaKey) {
@@ -1065,19 +1124,21 @@
             }
         });
 
-        // Initialize the application
-        function initializeApp() {
-            updatePhotographerDropdown();
-            updateDashboard();
-            
-            // Check for Google Sheets connection
-            const sheetsUrl = localStorage.getItem('rn_studio_sheets_url');
-            if (sheetsUrl) {
-                document.getElementById('googleSheetUrl').value = sheetsUrl;
-                document.querySelector('.status-indicator').textContent = 'Connected';
-                document.querySelector('.status-indicator').className = 'status-indicator status-connected';
-            }
-        }
+function initializeApp() {
+    updatePhotographerDropdown();
+    updateDashboard();
+    
+    // Check for Google Sheets connection
+    const sheetsUrl = localStorage.getItem('rn_studio_sheets_url');
+    if (sheetsUrl) {
+        document.getElementById('googleSheetUrl').value = sheetsUrl;
+        document.querySelector('.status-indicator').textContent = 'Connected';
+        document.querySelector('.status-indicator').className = 'status-indicator status-connected';
+        
+        // Load data from Google Sheets on startup
+        loadFromGoogleSheets();
+    }
+}
 
         // Auto-save every 30 seconds
         setInterval(saveAndSync, 30000);
