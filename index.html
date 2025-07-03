@@ -979,43 +979,54 @@
 
         // Sync with Google Sheets
         function syncToGoogleSheets() {
-            const url = localStorage.getItem('rn_studio_sheets_url');
-            if (!url) {
-                console.log('Google Sheets not configured');
-                return;
-            }
-            
-            // Use form submission to avoid CORS issues
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = url;
-            form.style.display = 'none';
-            
-            const actionInput = document.createElement('input');
-            actionInput.type = 'hidden';
-            actionInput.name = 'action';
-            actionInput.value = 'sync';
-            form.appendChild(actionInput);
-            
-            const eventsInput = document.createElement('input');
-            eventsInput.type = 'hidden';
-            eventsInput.name = 'events';
-            eventsInput.value = JSON.stringify(events);
-            form.appendChild(eventsInput);
-            
-            const photographersInput = document.createElement('input');
-            photographersInput.type = 'hidden';
-            photographersInput.name = 'photographers';
-            photographersInput.value = JSON.stringify(photographers);
-            form.appendChild(photographersInput);
-            
-            document.body.appendChild(form);
-            form.submit();
-            document.body.removeChild(form);
-            
-            showNotification('Data synced to Google Sheets!', 'success');
-        }
-
+    const url = localStorage.getItem('rn_studio_sheets_url');
+    if (!url) {
+        console.log('Google Sheets not configured');
+        return;
+    }
+    
+    // Create hidden iframe to prevent page navigation
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.name = 'syncFrame';
+    document.body.appendChild(iframe);
+    
+    // Use form submission to hidden iframe
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = url;
+    form.target = 'syncFrame';
+    form.style.display = 'none';
+    
+    const actionInput = document.createElement('input');
+    actionInput.type = 'hidden';
+    actionInput.name = 'action';
+    actionInput.value = 'sync';
+    form.appendChild(actionInput);
+    
+    const eventsInput = document.createElement('input');
+    eventsInput.type = 'hidden';
+    eventsInput.name = 'events';
+    eventsInput.value = JSON.stringify(events);
+    form.appendChild(eventsInput);
+    
+    const photographersInput = document.createElement('input');
+    photographersInput.type = 'hidden';
+    photographersInput.name = 'photographers';
+    photographersInput.value = JSON.stringify(photographers);
+    form.appendChild(photographersInput);
+    
+    document.body.appendChild(form);
+    form.submit();
+    
+    // Clean up after a delay
+    setTimeout(() => {
+        document.body.removeChild(form);
+        document.body.removeChild(iframe);
+    }, 2000);
+    
+    showNotification('Data synced to Google Sheets!', 'success');
+}
         // Auto-sync when data changes
         function saveAndSync() {
             localStorage.setItem('rn_studio_events', JSON.stringify(events));
