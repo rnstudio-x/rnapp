@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RN Studio - Business Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            color: #666;
+            -webkit-text-fill-color: #666;
+        }
+
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 5px;
+        }
+
+        .nav-tab {
+            padding: 12px 25px;
+            margin: 0 5px;
+            background: none;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: #666;
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .nav-tab:hover:not(.active) {
+            background: #e9ecef;
+            transform: translateY(-1px);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-section {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e9ecef;
+        }
+
+        .form-section h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #444;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .data-table th {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            font-weight: 600;
+        }
+
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid #667eea;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card h4 {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-card .value {
+            font-size: 2em;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .google-sheets-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border: 2px dashed #667eea;
+        }
+
+        .google-sheets-section h4 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-connected {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-tabs {
+                flex-direction: column;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>RN Studio</h1>
+            <p>Professional Photography Business Manager</p>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('dashboard')">Dashboard</button>
+            <button class="nav-tab" onclick="showTab('add-event')">Add Event</button>
+            <button class="nav-tab" onclick="showTab('events')">View Events</button>
+            <button class="nav-tab" onclick="showTab('photographers')">Photographers</button>
+            <button class="nav-tab" onclick="showTab('analytics')">Analytics</button>
+            <button class="nav-tab" onclick="showTab('settings')">Settings</button>
+        </div>
+
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h4>Total Events</h4>
+                    <div class="value" id="totalEvents">0</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Total Revenue</h4>
+                    <div class="value" id="totalRevenue">₹0</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Total Expenses</h4>
+                    <div class="value" id="totalExpenses">₹0</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Net Profit</h4>
+                    <div class="value" id="netProfit">₹0</div>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <h3>Recent Events</h3>
+                <table class="data-table" id="recentEventsTable">
+                    <thead>
+                        <tr>
+                            <th>Event Name</th>
+                            <th>Date</th>
+                            <th>Prize</th>
+                            <th>Photographer</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentEventsBody">
+                        <tr>
+                            <td colspan="5" style="text-align: center; color: #666;">No events found</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Add Event Tab -->
+        <div id="add-event" class="tab-content">
+            <div class="form-section">
+                <h3>Add New Event</h3>
+                <form id="eventForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="eventName">Event Name</label>
+                            <input type="text" id="eventName" name="eventName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="eventDate">Event Date</label>
+                            <input type="date" id="eventDate" name="eventDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="eventPrize">Event Prize (₹)</label>
+                            <input type="number" id="eventPrize" name="eventPrize" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="eventExpenses">Event Expenses (₹)</label>
+                            <input type="number" id="eventExpenses" name="eventExpenses">
+                        </div>
+                        <div class="form-group">
+                            <label for="photographerName">Photographer</label>
+                            <select id="photographerName" name="photographerName" required>
+                                <option value="">Select Photographer</option>
+                                <option value="Self">Self</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="photographerSalary">Photographer Salary (₹)</label>
+                            <input type="number" id="photographerSalary" name="photographerSalary">
+                        </div>
+                        <div class="form-group">
+                            <label for="eventDuration">Event Duration (Days)</label>
+                            <input type="number" id="eventDuration" name="eventDuration" min="1" value="1">
+                        </div>
+                        <div class="form-group">
+                            <label for="eventType">Event Type</label>
+                            <select id="eventType" name="eventType" required>
+                                <option value="">Select Type</option>
+                                <option value="Wedding">Wedding</option>
+                                <option value="Pre-Wedding">Pre-Wedding</option>
+                                <option value="Birthday">Birthday</option>
+                                <option value="Corporate">Corporate</option>
+                                <option value="Fashion">Fashion</option>
+                                <option value="Portrait">Portrait</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top: 20px;">
+                        <label for="eventNotes">Notes</label>
+                        <textarea id="eventNotes" name="eventNotes" rows="3" placeholder="Additional notes about the event..."></textarea>
+                    </div>
+                    <div class="action-buttons">
+                        <button type="submit" class="btn btn-primary">Add Event</button>
+                        <button type="button" class="btn btn-secondary" onclick="clearForm()">Clear Form</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- View Events Tab -->
+        <div id="events" class="tab-content">
+            <div class="form-section">
+                <h3>All Events</h3>
+                <div style="margin-bottom: 20px;">
+                    <input type="text" id="searchEvents" placeholder="Search events..." style="padding: 10px; width: 300px; border: 1px solid #ddd; border-radius: 5px;">
+                    <select id="filterType" style="padding: 10px; margin-left: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                        <option value="">All Types</option>
+                        <option value="Wedding">Wedding</option>
+                        <option value="Pre-Wedding">Pre-Wedding</option>
+                        <option value="Birthday">Birthday</option>
+                        <option value="Corporate">Corporate</option>
+                        <option value="Fashion">Fashion</option>
+                        <option value="Portrait">Portrait</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <table class="data-table" id="eventsTable">
+                    <thead>
+                        <tr>
+                            <th>Event Name</th>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Prize</th>
+                            <th>Expenses</th>
+                            <th>Photographer</th>
+                            <th>Salary</th>
+                            <th>Duration</th>
+                            <th>Profit</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="eventsTableBody">
+                        <tr>
+                            <td colspan="10" style="text-align: center; color: #666;">No events found</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Photographers Tab -->
+        <div id="photographers" class="tab-content">
+            <div class="form-section">
+                <h3>Add Photographer</h3>
+                <form id="photographerForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="photographerNameAdd">Photographer Name</label>
+                            <input type="text" id="photographerNameAdd" name="photographerNameAdd" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="photographerContact">Contact Number</label>
+                            <input type="tel" id="photographerContact" name="photographerContact">
+                        </div>
+                        <div class="form-group">
+                            <label for="photographerEmail">Email</label>
+                            <input type="email" id="photographerEmail" name="photographerEmail">
+                        </div>
+                        <div class="form-group">
+                            <label for="photographerRate">Daily Rate (₹)</label>
+                            <input type="number" id="photographerRate" name="photographerRate">
+                        </div>
+                    </div>
+                    <div class="action-buttons">
+                        <button type="submit" class="btn btn-primary">Add Photographer</button>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="form-section">
+                <h3>Photographers List</h3>
+                <table class="data-table" id="photographersTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Contact</th>
+                            <th>Email</th>
+                            <th>Daily Rate</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="photographersTableBody">
+                        <tr>
+                            <td colspan="5" style="text-align: center; color: #666;">No photographers found</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Analytics Tab -->
+        <div id="analytics" class="tab-content">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h4>Average Event Value</h4>
+                    <div class="value" id="avgEventValue">₹0</div>
+                </div>
+                <div class="stat-card">
+                    <h4>This Month Revenue</h4>
+                    <div class="value" id="monthRevenue">₹0</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Most Popular Event Type</h4>
+                    <div class="value" id="popularEventType">-</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Total Event Days</h4>
+                    <div class="value" id="totalEventDays">0</div>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <h3>Monthly Revenue Analysis</h3>
+                <canvas id="revenueChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div id="settings" class="tab-content">
+            <div class="form-section">
+                <h3>Google Sheets Integration</h3>
+                <div class="google-sheets-section">
+                    <h4>Connection Status: <span class="status-indicator status-disconnected">Disconnected</span></h4>
+                    <p>To connect with Google Sheets, you'll need to:</p>
+                    <ol>
+                        <li>Create a Google Sheet for your business data</li>
+                        <li>Set up Google Apps Script</li>
+                        <li>Deploy as web app</li>
+                        <li>Enter the web app URL below</li>
+                    </ol>
+                    <div class="form-group" style="margin-top: 15px;">
+                        <label for="googleSheetUrl">Google Apps Script Web App URL</label>
+                        <input type="url" id="googleSheetUrl" placeholder="https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec">
+                    </div>
+                    <button class="btn btn-primary" onclick="connectGoogleSheets()">Connect to Google Sheets</button>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <h3>Data Management</h3>
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="exportData()">Export Data</button>
+                    <button class="btn btn-secondary" onclick="importData()">Import Data</button>
+                    <button class="btn btn-danger" onclick="clearAllData()">Clear All Data</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data storage
+        let events = JSON.parse(localStorage.getItem('rn_studio_events')) || [];
+        let photographers = JSON.parse(localStorage.getItem('rn_studio_photographers')) || [
+            {id: 1, name: 'Self', contact: '', email: '', rate: 0}
+        ];
+
+        // Tab navigation
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all nav tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked nav tab
+            event.target.classList.add('active');
+            
+            // Update data when switching tabs
+            if (tabName === 'dashboard') {
+                updateDashboard();
+            } else if (tabName === 'events') {
+                loadEvents();
+            } else if (tabName === 'photographers') {
+                loadPhotographers();
+            } else if (tabName === 'analytics') {
+                updateAnalytics();
+            }
+        }
+
+        // Event form submission
+        document.getElementById('eventForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const eventData = {
+                id: Date.now(),
+                name: formData.get('eventName'),
+                date: formData.get('eventDate'),
+                prize: parseFloat(formData.get('eventPrize')),
+                expenses: parseFloat(formData.get('eventExpenses')) || 0,
+                photographer: formData.get('photographerName'),
+                salary: parseFloat(formData.get('photographerSalary')) || 0,
+                duration: parseInt(formData.get('eventDuration')),
+                type: formData.get('eventType'),
+                notes: formData.get('eventNotes'),
+                profit: parseFloat(formData.get('eventPrize')) - (parseFloat(formData.get('eventExpenses')) || 0) - (parseFloat(formData.get('photographerSalary')) || 0)
+            };
+            
+            events.push(eventData);
+            localStorage.setItem('rn_studio_events', JSON.stringify(events));
+            
+            alert('Event added successfully!');
+            clearForm();
+            updateDashboard();
+        });
+
+        // Photographer form submission
+        document.getElementById('photographerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const photographerData = {
+                id: Date.now(),
+                name: formData.get('photographerNameAdd'),
+                contact: formData.get('photographerContact'),
+                email: formData.get('photographerEmail'),
+                rate: parseFloat(formData.get('photographerRate')) || 0
+            };
+            
+            photographers.push(photographerData);
+            localStorage.setItem('rn_studio_photographers', JSON.stringify(photographers));
+            
+            // Update photographer dropdown
+            updatePhotographerDropdown();
+            
+            alert('Photographer added successfully!');
+            document.getElementById('photographerForm').reset();
+            loadPhotographers();
+        });
+
+        // Update photographer dropdown
+        function updatePhotographerDropdown() {
+            const select = document.getElementById('photographerName');
+            select.innerHTML = '<option value="">Select Photographer</option>';
+            
+            photographers.forEach(photographer => {
+                const option = document.createElement('option');
+                option.value = photographer.name;
+                option.textContent = photographer.name;
+                select.appendChild(option);
+            });
+        }
+
+        // Load events table
+        function loadEvents() {
+            const tbody = document.getElementById('eventsTableBody');
+            tbody.innerHTML = '';
+            
+            if (events.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: #666;">No events found</td></tr>';
+                return;
+            }
+            
+            events.forEach(event => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${event.name}</td>
+                    <td>${new Date(event.date).toLocaleDateString()}</td>
+                    <td>${event.type}</td>
+                    <td>₹${event.prize.toLocaleString()}</td>
+                    <td>₹${event.expenses.toLocaleString()}</td>
+                    <td>${event.photographer}</td>
+                    <td>₹${event.salary.toLocaleString()}</td>
+                    <td>${event.duration} days</td>
+                    <td style="color: ${event.profit >= 0 ? 'green' : 'red'}">₹${event.profit.toLocaleString()}</td>
+                    <td>
+                        <button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px;" onclick="deleteEvent(${event.id})">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Load photographers table
+        function loadPhotographers() {
+            const tbody = document.getElementById('photographersTableBody');
+            tbody.innerHTML = '';
+            
+            if (photographers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #666;">No photographers found</td></tr>';
+                return;
+            }
+            
+            photographers.forEach(photographer => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${photographer.name}</td>
+                    <td>${photographer.contact}</td>
+                    <td>${photographer.email}</td>
+                    <td>₹${photographer.rate.toLocaleString()}</td>
+                    <td>
+                        <button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px;" onclick="deletePhotographer(${photographer.id})">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Update dashboard
+        function updateDashboard() {
+            const totalEvents = events.length;
+            const totalRevenue = events.reduce((sum, event) => sum + event.prize, 0);
+            const totalExpenses = events.reduce((sum, event) => sum + event.expenses + event.salary, 0);
+            const netProfit = totalRevenue - totalExpenses;
+            
+            document.getElementById('totalEvents').textContent = totalEvents;
+            document.getElementById('totalRevenue').textContent = '₹' + totalRevenue.toLocaleString();
+            document.getElementById('totalExpenses').textContent = '₹' + totalExpenses.toLocaleString();
+            document.getElementById('netProfit').textContent = '₹' + netProfit.toLocaleString();
+            
+            // Update recent events
+            const recentEvents = events.slice(-5).reverse();
+            const tbody = document.getElementById('recentEventsBody');
+            tbody.innerHTML = '';
+            
+            if (recentEvents.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #666;">No events found</td></tr>';
+            } else {
+                recentEvents.forEach(event => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${event.name}</td>
+                        <td>${new Date(event.date).toLocaleDateString()}</td>
+                        <td>₹${event.prize.toLocaleString()}</td>
+                        <td>${event.photographer}</td>
+                        <td><span class="status-indicator status-connected">Completed</span></td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+        }
+
+        // Update analytics
+        function updateAnalytics() {
+            const avgEventValue = events.length > 0 ? events.reduce((sum, event) => sum + event.prize, 0) / events.length : 0;
+            const currentMonth = new Date().getMonth();
+            const currentYear = new Date().getFullYear();
+            const monthRevenue = events.filter(event => {
+                const eventDate = new Date(event.date);
+                return eventDate.getMonth() === currentMonth && eventDate.getFullYear() === currentYear;
+            }).reduce((sum, event) => sum + event.prize, 0);
+            
+            const eventTypes = {};
+            events.forEach(event => {
+                eventTypes[event.type] = (eventTypes[event.type] || 0) + 1;
+            });
+            
+            const popularEventType = Object.keys(eventTypes).length > 0 ? 
+                Object.keys(eventTypes).reduce((a, b) => eventTypes[a] > eventTypes[b] ? a : b) : '-';
+            
+            const totalEventDays = events.reduce((sum, event) => sum + event.duration, 0);
+            
+            document.getElementById('avgEventValue').textContent = '₹' + Math.round(avgEventValue).toLocaleString();
+            document.getElementById('monthRevenue').textContent = '₹' + monthRevenue.toLocaleString();
+            document.getElementById('popularEventType').textContent = popularEventType;
+            document.getElementById('totalEventDays').textContent = totalEventDays;
+        }
+
+        // Utility functions
+        function clearForm() {
+            document.getElementById('eventForm').reset();
+        }
+
+        function deleteEvent(id) {
+            if (confirm('Are you sure you want to delete this event?')) {
+                events = events.filter(event => event.id !== id);
+                localStorage.setItem('rn_studio_events', JSON.stringify(events));
+                loadEvents();
+                updateDashboard();
+            }
+        }
+
+        function deletePhotographer(id) {
+            if (confirm('Are you sure you want to delete this photographer?')) {
+                photographers = photographers.filter(photographer => photographer.id !== id);
+                localStorage.setItem('rn_studio_photographers', JSON.stringify(photographers));
+                updatePhotographerDropdown();
+                loadPhotographers();
+            }
+        }
+
+        // Search and filter functions
+        document.getElementById('searchEvents').addEventListener('input', function() {
+            filterEvents();
+        });
+
+        document.getElementById('filterType').addEventListener('change', function() {
+            filterEvents();
+        });
+
+        function filterEvents() {
+            const searchTerm = document.getElementById('searchEvents').value.toLowerCase();
+            const filterType = document.getElementById('filterType').value;
+            
+            let filteredEvents = events;
+            
+            if (searchTerm) {
+                filteredEvents = filteredEvents.filter(event => 
+                    event.name.toLowerCase().includes(searchTerm) ||
+                    event.photographer.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            if (filterType) {
+                filteredEvents = filteredEvents.filter(event => event.type === filterType);
+            }
+            
+            displayFilteredEvents(filteredEvents);
+        }
+
+        function displayFilteredEvents(filteredEvents) {
+            const tbody = document.getElementById('eventsTableBody');
+            tbody.innerHTML = '';
+            
+            if (filteredEvents.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: #666;">No events found</td></tr>';
+                return;
+            }
+            
+            filteredEvents.forEach(event => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${event.name}</td>
+                    <td>${new Date(event.date).toLocaleDateString()}</td>
+                    <td>${event.type}</td>
+                    <td>₹${event.prize.toLocaleString()}</td>
+                    <td>₹${event.expenses.toLocaleString()}</td>
+                    <td>${event.photographer}</td>
+                    <td>₹${event.salary.toLocaleString()}</td>
+                    <td>${event.duration} days</td>
+                    <td style="color: ${event.profit >= 0 ? 'green' : 'red'}">₹${event.profit.toLocaleString()}</td>
+                    <td>
+                        <button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px;" onclick="deleteEvent(${event.id})">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Google Sheets integration
+        function connectGoogleSheets() {
+            const url = document.getElementById('googleSheetUrl').value;
+            if (!url) {
+                alert('Please enter the Google Apps Script URL');
+                return;
+            }
+            
+            // Store the URL
+            localStorage.setItem('rn_studio_sheets_url', url);
+            
+            // Test connection
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'test',
+                    data: 'connection test'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.querySelector('.status-indicator').textContent = 'Connected';
+                    document.querySelector('.status-indicator').className = 'status-indicator status-connected';
+                    alert('Successfully connected to Google Sheets!');
+                } else {
+                    throw new Error('Connection failed');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to connect to Google Sheets. Please check your URL and try again.');
+            });
+        }
+
+        // Data management functions
+        function exportData() {
+            const data = {
+                events: events,
+                photographers: photographers,
+                exportDate: new Date().toISOString()
+            };
+            
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = 'rn_studio_backup_' + new Date().toISOString().split('T')[0] + '.json';
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        }
+
+        function importData() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        if (data.events && data.photographers) {
+                            if (confirm('This will replace all current data. Are you sure?')) {
+                                events = data.events;
+                                photographers = data.photographers;
+                                localStorage.setItem('rn_studio_events', JSON.stringify(events));
+                                localStorage.setItem('rn_studio_photographers', JSON.stringify(photographers));
+                                updatePhotographerDropdown();
+                                updateDashboard();
+                                alert('Data imported successfully!');
+                            }
+                        } else {
+                            alert('Invalid backup file format.');
+                        }
+                    } catch (error) {
+                        alert('Error reading backup file.');
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        function clearAllData() {
+            if (confirm('This will permanently delete all your data. Are you sure?')) {
+                if (confirm('Last chance! This action cannot be undone.')) {
+                    events = [];
+                    photographers = [{id: 1, name: 'Self', contact: '', email: '', rate: 0}];
+                    localStorage.setItem('rn_studio_events', JSON.stringify(events));
+                    localStorage.setItem('rn_studio_photographers', JSON.stringify(photographers));
+                    updatePhotographerDropdown();
+                    updateDashboard();
+                    loadEvents();
+                    loadPhotographers();
+                    alert('All data cleared successfully!');
+                }
+            }
+        }
+
+        // Sync with Google Sheets
+        function syncToGoogleSheets() {
+            const url = localStorage.getItem('rn_studio_sheets_url');
+            if (!url) {
+                console.log('Google Sheets not configured');
+                return;
+            }
+            
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'sync',
+                    events: events,
+                    photographers: photographers
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('Data synced to Google Sheets');
+                }
+            })
+            .catch(error => {
+                console.error('Sync error:', error);
+            });
+        }
+
+        // Auto-sync when data changes
+        function saveAndSync() {
+            localStorage.setItem('rn_studio_events', JSON.stringify(events));
+            localStorage.setItem('rn_studio_photographers', JSON.stringify(photographers));
+            syncToGoogleSheets();
+        }
+
+        // Enhanced form validation
+        document.getElementById('eventForm').addEventListener('input', function(e) {
+            const target = e.target;
+            if (target.name === 'photographerName' && target.value) {
+                const photographer = photographers.find(p => p.name === target.value);
+                if (photographer && photographer.rate > 0) {
+                    document.getElementById('photographerSalary').value = photographer.rate;
+                }
+            }
+        });
+
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 'n':
+                        e.preventDefault();
+                        showTab('add-event');
+                        break;
+                    case 'e':
+                        e.preventDefault();
+                        exportData();
+                        break;
+                    case 's':
+                        e.preventDefault();
+                        syncToGoogleSheets();
+                        break;
+                }
+            }
+        });
+
+        // Initialize the application
+        function initializeApp() {
+            updatePhotographerDropdown();
+            updateDashboard();
+            
+            // Check for Google Sheets connection
+            const sheetsUrl = localStorage.getItem('rn_studio_sheets_url');
+            if (sheetsUrl) {
+                document.getElementById('googleSheetUrl').value = sheetsUrl;
+                // Try to connect
+                connectGoogleSheets();
+            }
+        }
+
+        // Auto-save every 30 seconds
+        setInterval(saveAndSync, 30000);
+
+        // Initialize when page loads
+        window.addEventListener('load', initializeApp);
+        
+        // Handle page unload
+        window.addEventListener('beforeunload', function() {
+            saveAndSync();
+        });
+
+        // Add notification system
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 5px;
+                color: white;
+                font-weight: bold;
+                z-index: 1000;
+                opacity: 0;
+                transform: translateY(-20px);
+                transition: all 0.3s ease;
+                ${type === 'success' ? 'background: #28a745;' : 
+                  type === 'error' ? 'background: #dc3545;' : 
+                  'background: #17a2b8;'}
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '1';
+                notification.style.transform = 'translateY(0)';
+            }, 100);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateY(-20px)';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        // Enhanced error handling
+        window.addEventListener('error', function(e) {
+            console.error('Application error:', e);
+            showNotification('An error occurred. Please try again.', 'error');
+        });
+
+        // Service worker registration for offline support
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                        console.log('ServiceWorker registration successful');
+                    })
+                    .catch(function(err) {
+                        console.log('ServiceWorker registration failed');
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
