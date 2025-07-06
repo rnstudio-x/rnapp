@@ -1137,1757 +1137,988 @@
     </div>
 </div>
 <script>
-    
-        // Data storage
-        let events = JSON.parse(localStorage.getItem('rn_studio_events')) || [];
-        let photographers = JSON.parse(localStorage.getItem('rn_studio_photographers')) || [
-            {id: 1, name: 'Self', contact: '', email: '', rate: 0}
-        ];
-        let attendanceRecords = JSON.parse(localStorage.getItem('rn_studio_attendance')) || [];
-        let salaryPayments = JSON.parse(localStorage.getItem('rn_studio_salary_payments')) || [];
-        let expenses = JSON.parse(localStorage.getItem('rn_studio_expenses')) || [];
+            // ===== ENHANCED PHOTOGRAPHY BUSINESS MANAGER - JAVASCRIPT =====
+// Professional Photography Business Management System
+// Compatible with Google Apps Script backend integration
 
-        let isConnectedToSheets = false;
-        let sheetsUrl = '';
+class PhotographyBusinessManager {
+    constructor() {
+        this.events = JSON.parse(localStorage.getItem('events') || '[]');
+        this.photographers = JSON.parse(localStorage.getItem('photographers') || '[]');
+        this.attendanceRecords = JSON.parse(localStorage.getItem('attendance') || '[]');
+        this.expenseRecords = JSON.parse(localStorage.getItem('expenses') || '[]');
+        this.paymentHistory = JSON.parse(localStorage.getItem('payments') || '[]');
+        this.salaryData = JSON.parse(localStorage.getItem('salaryData') || '{}');
+        
+        // Configuration
+        this.config = {
+            googleSheetUrl: localStorage.getItem('googleSheetUrl') || '',
+            autoSync: localStorage.getItem('autoSync') === 'true',
+            currency: 'INR',
+            currencySymbol: '₹',
+            reportEmail: localStorage.getItem('reportEmail') || '',
+            darkMode: localStorage.getItem('darkMode') === 'true',
+            notifications: localStorage.getItem('notifications') !== 'false'
+        };
+        
+        // Initialize default photographer if none exists
+        if (this.photographers.length === 0) {
+            this.addDefaultPhotographer();
+        }
+        
+        this.initializeEventHandlers();
+        this.loadDashboard();
+        this.setupPeriodicSync();
+    }
 
-        // Tab navigation
-        function showTab(tabName) {
-            // Hide all tabs
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
+    // ===== INITIALIZATION =====
+    initializeEventHandlers() {
+        // Event Management
+        document.getElementById('addEventBtn')?.addEventListener('click', () => this.showEventModal());
+        document.getElementById('saveEventBtn')?.addEventListener('click', () => this.saveEvent());
+        document.getElementById('saveEventUpcomingBtn')?.addEventListener('click', () => this.saveEventUpcoming());
+        
+        // Photographer Management
+        document.getElementById('addPhotographerBtn')?.addEventListener('click', () => this.showPhotographerModal());
+        document.getElementById('savePhotographerBtn')?.addEventListener('click', () => this.savePhotographer());
+        
+        // Attendance Management
+        document.getElementById('addAttendanceBtn')?.addEventListener('click', () => this.showAttendanceModal());
+        document.getElementById('saveAttendanceBtn')?.addEventListener('click', () => this.saveAttendance());
+        
+        // Expense Management
+        document.getElementById('addExpenseBtn')?.addEventListener('click', () => this.showExpenseModal());
+        document.getElementById('saveExpenseBtn')?.addEventListener('click', () => this.saveExpense());
+        
+        // Salary Management
+        document.getElementById('addPaymentBtn')?.addEventListener('click', () => this.showPaymentModal());
+        document.getElementById('savePaymentBtn')?.addEventListener('click', () => this.savePayment());
+        
+        // Settings and Sync
+        document.getElementById('syncBtn')?.addEventListener('click', () => this.syncWithGoogleSheets());
+        document.getElementById('settingsBtn')?.addEventListener('click', () => this.showSettingsModal());
+        document.getElementById('saveSettingsBtn')?.addEventListener('click', () => this.saveSettings());
+        
+        // Export functionality
+        document.getElementById('exportBtn')?.addEventListener('click', () => this.showExportModal());
+        document.getElementById('exportDataBtn')?.addEventListener('click', () => this.exportData());
+        
+        // Navigation
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const target = e.target.getAttribute('data-target');
+                this.showSection(target);
             });
-            
-            // Remove active class from all nav tabs
-            document.querySelectorAll('.nav-tab').forEach(tab => {
-                tab.classList.remove('active');
+        });
+        
+        // Modal close handlers
+        document.querySelectorAll('.modal .close').forEach(closeBtn => {
+            closeBtn.addEventListener('click', (e) => {
+                e.target.closest('.modal').style.display = 'none';
             });
+        });
+        
+        // Click outside modal to close
+        window.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal')) {
+                e.target.style.display = 'none';
+            }
+        });
+        
+        // Auto-calculate profit in event form
+        document.getElementById('eventPrize')?.addEventListener('input', () => this.calculateEventProfit());
+        document.getElementById('eventExpenses')?.addEventListener('input', () => this.calculateEventProfit());
+        document.getElementById('eventSalary')?.addEventListener('input', () => this.calculateEventProfit());
+        
+        // Auto-calculate earnings in attendance form
+        document.getElementById('attendanceDailyRate')?.addEventListener('input', () => this.calculateAttendanceEarnings());
+        document.getElementById('attendanceStatus')?.addEventListener('change', () => this.calculateAttendanceEarnings());
+        
+        // Search functionality
+        document.getElementById('searchInput')?.addEventListener('input', (e) => this.searchRecords(e.target.value));
+        
+        // Theme toggle
+        document.getElementById('themeToggle')?.addEventListener('click', () => this.toggleTheme());
+    }
+
+    addDefaultPhotographer() {
+        const defaultPhotographer = {
+            id: 1,
+            name: 'Self',
+            contact: '',
+            email: '',
+            rate: 0,
+            createdAt: new Date().toISOString()
+        };
+        this.photographers.push(defaultPhotographer);
+        this.saveToLocalStorage();
+    }
+
+    // ===== EVENT MANAGEMENT =====
+    showEventModal(eventId = null) {
+        const modal = document.getElementById('eventModal');
+        const form = document.getElementById('eventForm');
+        const titleElement = document.getElementById('eventModalTitle');
+        
+        if (eventId) {
+            const event = this.events.find(e => e.id === eventId);
+            if (event) {
+                titleElement.textContent = 'Edit Event';
+                this.populateEventForm(event);
+            }
+        } else {
+            titleElement.textContent = 'Add New Event';
+            form.reset();
+            document.getElementById('eventId').value = '';
+        }
+        
+        this.populatePhotographerDropdown('eventPhotographer');
+        modal.style.display = 'block';
+    }
+
+    populateEventForm(event) {
+        document.getElementById('eventId').value = event.id;
+        document.getElementById('eventName').value = event.name;
+        document.getElementById('eventDate').value = event.date;
+        document.getElementById('eventType').value = event.type;
+        document.getElementById('eventPrize').value = event.prize;
+        document.getElementById('eventExpenses').value = event.expenses;
+        document.getElementById('eventPhotographer').value = event.photographer;
+        document.getElementById('eventSalary').value = event.salary;
+        document.getElementById('eventDuration').value = event.duration;
+        document.getElementById('eventNotes').value = event.notes || '';
+        this.calculateEventProfit();
+    }
+
+    saveEvent() {
+        const formData = new FormData(document.getElementById('eventForm'));
+        const eventData = {
+            id: formData.get('eventId') || Date.now(),
+            name: formData.get('eventName'),
+            date: formData.get('eventDate'),
+            type: formData.get('eventType'),
+            prize: parseFloat(formData.get('eventPrize')) || 0,
+            expenses: parseFloat(formData.get('eventExpenses')) || 0,
+            photographer: formData.get('eventPhotographer'),
+            salary: parseFloat(formData.get('eventSalary')) || 0,
+            duration: parseInt(formData.get('eventDuration')) || 1,
+            notes: formData.get('eventNotes') || '',
+            profit: 0,
+            status: 'completed',
+            createdAt: new Date().toISOString()
+        };
+        
+        eventData.profit = eventData.prize - eventData.expenses - eventData.salary;
+        
+        const existingIndex = this.events.findIndex(e => e.id === eventData.id);
+        if (existingIndex !== -1) {
+            this.events[existingIndex] = eventData;
+        } else {
+            this.events.push(eventData);
+        }
+        
+        this.saveToLocalStorage();
+        this.refreshEventTables();
+        this.updateSalaryData();
+        document.getElementById('eventModal').style.display = 'none';
+        this.showNotification('Event saved successfully!', 'success');
+        
+        if (this.config.autoSync && this.config.googleSheetUrl) {
+            this.syncWithGoogleSheets();
+        }
+    }
+
+    saveEventUpcoming() {
+        const formData = new FormData(document.getElementById('eventForm'));
+        const eventData = {
+            id: formData.get('eventId') || Date.now(),
+            name: formData.get('eventName'),
+            date: formData.get('eventDate'),
+            type: formData.get('eventType'),
+            prize: parseFloat(formData.get('eventPrize')) || 0,
+            expenses: 0,
+            photographer: formData.get('eventPhotographer'),
+            salary: 0,
+            duration: parseInt(formData.get('eventDuration')) || 1,
+            notes: formData.get('eventNotes') || '',
+            profit: 0,
+            status: 'upcoming',
+            createdAt: new Date().toISOString()
+        };
+        
+        const existingIndex = this.events.findIndex(e => e.id === eventData.id);
+        if (existingIndex !== -1) {
+            this.events[existingIndex] = eventData;
+        } else {
+            this.events.push(eventData);
+        }
+        
+        this.saveToLocalStorage();
+        this.refreshEventTables();
+        document.getElementById('eventModal').style.display = 'none';
+        this.showNotification('Upcoming event saved successfully!', 'success');
+        
+        if (this.config.autoSync && this.config.googleSheetUrl) {
+            this.syncWithGoogleSheets();
+        }
+    }
+
+    deleteEvent(eventId) {
+        if (confirm('Are you sure you want to delete this event?')) {
+            this.events = this.events.filter(e => e.id !== eventId);
+            this.saveToLocalStorage();
+            this.refreshEventTables();
+            this.updateSalaryData();
+            this.showNotification('Event deleted successfully!', 'success');
             
-            // Show selected tab
-            document.getElementById(tabName).classList.add('active');
-            
-            // Add active class to clicked nav tab
-            event.target.classList.add('active');
-            
-            // Update data when switching tabs
-            if (tabName === 'dashboard') {
-                updateDashboard();
-            } else if (tabName === 'events') {
-                loadEvents();
-            } else if (tabName === 'photographers') {
-                loadPhotographers();
-            } else if (tabName === 'analytics') {
-                updateAnalytics();
-            } else if (tabName === 'salary-management') {
-                loadSalaryManagement();
-            } else if (tabName === 'expense-tracker') {
-                loadExpenseTracker();
-            } else if (tabName === 'salary-dashboard') {
-                loadSalaryDashboard();
+            if (this.config.autoSync && this.config.googleSheetUrl) {
+                this.syncWithGoogleSheets();
             }
         }
+    }
 
-        // Event form submission
-        document.getElementById('eventForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(e.target);
-            const eventData = {
-                id: Date.now(),
-                name: formData.get('eventName'),
-                date: formData.get('eventDate'),
-                prize: parseFloat(formData.get('eventPrize')),
-                expenses: parseFloat(formData.get('eventExpenses')) || 0,
-                photographer: formData.get('photographerName'),
-                salary: parseFloat(formData.get('photographerSalary')) || 0,
-                duration: parseInt(formData.get('eventDuration')),
-                type: formData.get('eventType'),
-                notes: formData.get('eventNotes'),
-                profit: parseFloat(formData.get('eventPrize')) - (parseFloat(formData.get('eventExpenses')) || 0) - (parseFloat(formData.get('photographerSalary')) || 0)
-            };
-            
-            events.push(eventData);
-            saveDataLocally();
-            
-            // Auto-sync if connected
-            if (isConnectedToSheets) {
-                syncToGoogleSheets();
+    calculateEventProfit() {
+        const prize = parseFloat(document.getElementById('eventPrize').value) || 0;
+        const expenses = parseFloat(document.getElementById('eventExpenses').value) || 0;
+        const salary = parseFloat(document.getElementById('eventSalary').value) || 0;
+        const profit = prize - expenses - salary;
+        
+        const profitDisplay = document.getElementById('eventProfitDisplay');
+        if (profitDisplay) {
+            profitDisplay.textContent = `${this.config.currencySymbol}${profit.toFixed(2)}`;
+            profitDisplay.className = profit >= 0 ? 'profit-positive' : 'profit-negative';
+        }
+    }
+
+    // ===== PHOTOGRAPHER MANAGEMENT =====
+    showPhotographerModal(photographerId = null) {
+        const modal = document.getElementById('photographerModal');
+        const form = document.getElementById('photographerForm');
+        const titleElement = document.getElementById('photographerModalTitle');
+        
+        if (photographerId) {
+            const photographer = this.photographers.find(p => p.id === photographerId);
+            if (photographer) {
+                titleElement.textContent = 'Edit Photographer';
+                this.populatePhotographerForm(photographer);
             }
-            
-            showNotification('Event added successfully!', 'success');
-            clearForm();
-            updateDashboard();
-        });
+        } else {
+            titleElement.textContent = 'Add New Photographer';
+            form.reset();
+            document.getElementById('photographerId').value = '';
+        }
+        
+        modal.style.display = 'block';
+    }
 
-        // Photographer form submission
-        document.getElementById('photographerForm').addEventListener('submit', function(e) {
-            e.preventDefault();
+    populatePhotographerForm(photographer) {
+        document.getElementById('photographerId').value = photographer.id;
+        document.getElementById('photographerName').value = photographer.name;
+        document.getElementById('photographerContact').value = photographer.contact;
+        document.getElementById('photographerEmail').value = photographer.email || '';
+        document.getElementById('photographerRate').value = photographer.rate;
+    }
+
+    savePhotographer() {
+        const formData = new FormData(document.getElementById('photographerForm'));
+        const photographerData = {
+            id: formData.get('photographerId') || Date.now(),
+            name: formData.get('photographerName'),
+            contact: formData.get('photographerContact'),
+            email: formData.get('photographerEmail') || '',
+            rate: parseFloat(formData.get('photographerRate')) || 0,
+            createdAt: new Date().toISOString()
+        };
+        
+        const existingIndex = this.photographers.findIndex(p => p.id === photographerData.id);
+        if (existingIndex !== -1) {
+            this.photographers[existingIndex] = photographerData;
+        } else {
+            this.photographers.push(photographerData);
+        }
+        
+        this.saveToLocalStorage();
+        this.refreshPhotographerTable();
+        this.populatePhotographerDropdowns();
+        document.getElementById('photographerModal').style.display = 'none';
+        this.showNotification('Photographer saved successfully!', 'success');
+        
+        if (this.config.autoSync && this.config.googleSheetUrl) {
+            this.syncWithGoogleSheets();
+        }
+    }
+
+    deletePhotographer(photographerId) {
+        if (photographerId === 1) {
+            this.showNotification('Cannot delete the default "Self" photographer!', 'error');
+            return;
+        }
+        
+        if (confirm('Are you sure you want to delete this photographer?')) {
+            this.photographers = this.photographers.filter(p => p.id !== photographerId);
+            this.saveToLocalStorage();
+            this.refreshPhotographerTable();
+            this.populatePhotographerDropdowns();
+            this.showNotification('Photographer deleted successfully!', 'success');
             
-            const formData = new FormData(e.target);
-            const photographerData = {
-                id: Date.now(),
-                name: formData.get('photographerNameAdd'),
-                contact: formData.get('photographerContact'),
-                email: formData.get('photographerEmail'),
-                rate: parseFloat(formData.get('photographerRate')) || 0
-            };
-            
-            photographers.push(photographerData);
-            saveDataLocally();
-            
-            // Auto-sync if connected
-            if (isConnectedToSheets) {
-                syncToGoogleSheets();
+            if (this.config.autoSync && this.config.googleSheetUrl) {
+                this.syncWithGoogleSheets();
             }
-            
-            // Update photographer dropdown
-            updatePhotographerDropdown();
-            
-            showNotification('Photographer added successfully!', 'success');
-            document.getElementById('photographerForm').reset();
-            loadPhotographers();
-        });
+        }
+    }
 
-          // Attendance form submission
-        document.getElementById('attendanceForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-    
-            const formData = new FormData(e.target);
-            const attendanceData = {
-            id: Date.now(),
-            photographer: formData.get('attendancePhotographer'),
+    // ===== ATTENDANCE MANAGEMENT =====
+    showAttendanceModal(recordId = null) {
+        const modal = document.getElementById('attendanceModal');
+        const form = document.getElementById('attendanceForm');
+        const titleElement = document.getElementById('attendanceModalTitle');
+        
+        if (recordId) {
+            const record = this.attendanceRecords.find(r => r.id === recordId);
+            if (record) {
+                titleElement.textContent = 'Edit Attendance';
+                this.populateAttendanceForm(record);
+            }
+        } else {
+            titleElement.textContent = 'Record Attendance';
+            form.reset();
+            document.getElementById('attendanceId').value = '';
+            document.getElementById('attendanceDate').value = new Date().toISOString().split('T')[0];
+        }
+        
+        this.populatePhotographerDropdown('attendancePhotographer');
+        modal.style.display = 'block';
+    }
+
+    populateAttendanceForm(record) {
+        document.getElementById('attendanceId').value = record.id;
+        document.getElementById('attendanceDate').value = record.date;
+        document.getElementById('attendancePhotographer').value = record.photographerId;
+        document.getElementById('attendanceStatus').value = record.status;
+        document.getElementById('attendanceDailyRate').value = record.dailyRate;
+        document.getElementById('attendanceNotes').value = record.notes || '';
+        this.calculateAttendanceEarnings();
+    }
+
+    saveAttendance() {
+        const formData = new FormData(document.getElementById('attendanceForm'));
+        const photographerId = parseInt(formData.get('attendancePhotographer'));
+        const photographer = this.photographers.find(p => p.id === photographerId);
+        
+        const attendanceData = {
+            id: formData.get('attendanceId') || Date.now(),
             date: formData.get('attendanceDate'),
+            photographerId: photographerId,
+            photographerName: photographer ? photographer.name : 'Unknown',
             status: formData.get('attendanceStatus'),
+            dailyRate: parseFloat(formData.get('attendanceDailyRate')) || 0,
+            earnings: 0,
             notes: formData.get('attendanceNotes') || '',
             timestamp: new Date().toISOString()
-    };
-    
-    attendanceRecords.push(attendanceData);
-    saveDataLocally();
-    
-    // Auto-sync if connected
-    if (isConnectedToSheets) {
-        syncToGoogleSheets();
-    }
-    
-    showNotification('Attendance marked successfully!', 'success');
-    document.getElementById('attendanceForm').reset();
-    loadAttendanceTable();
-    loadSalaryDashboard();
-});
-
-// Salary payment form submission
-document.getElementById('salaryPaymentForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const formData = new FormData(e.target);
-    const paymentData = {
-        id: Date.now(),
-        photographer: formData.get('paymentPhotographer'),
-        amount: parseFloat(formData.get('paymentAmount')),
-        date: formData.get('paymentDate'),
-        mode: formData.get('paymentMode'),
-        remarks: formData.get('paymentRemarks') || '',
-        timestamp: new Date().toISOString()
-    };
-    
-    salaryPayments.push(paymentData);
-    saveDataLocally();
-    
-    // Auto-sync if connected
-    if (isConnectedToSheets) {
-        syncToGoogleSheets();
-    }
-    
-    showNotification('Salary payment recorded successfully!', 'success');
-    document.getElementById('salaryPaymentForm').reset();
-    loadSalaryDashboard();
-});
-
-// Expense form submission
-document.getElementById('expenseForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const formData = new FormData(e.target);
-    const expenseData = {
-        id: Date.now(),
-        date: formData.get('expenseDate'),
-        category: formData.get('expenseCategory'),
-        description: formData.get('expenseDescription'),
-        amount: parseFloat(formData.get('expenseAmount')),
-        paymentMode: formData.get('expensePaymentMode'),
-        remarks: formData.get('expenseRemarks') || '',
-        timestamp: new Date().toISOString()
-    };
-    
-    expenses.push(expenseData);
-    saveDataLocally();
-    
-    // Auto-sync if connected
-    if (isConnectedToSheets) {
-        syncToGoogleSheets();
-    }
-    
-    showNotification('Expense added successfully!', 'success');
-    document.getElementById('expenseForm').reset();
-    loadExpenseTable();
-    loadSalaryDashboard();
-});
-
-        // Save data to localStorage
-        function saveDataLocally() {
-            localStorage.setItem('rn_studio_events', JSON.stringify(events));
-            localStorage.setItem('rn_studio_photographers', JSON.stringify(photographers));
-            localStorage.setItem('rn_studio_attendance', JSON.stringify(attendanceRecords));
-            localStorage.setItem('rn_studio_salary_payments', JSON.stringify(salaryPayments));
-            localStorage.setItem('rn_studio_expenses', JSON.stringify(expenses));
+        };
+        
+        // Calculate earnings based on status
+        const baseEarnings = attendanceData.dailyRate;
+        switch (attendanceData.status) {
+            case 'present':
+                attendanceData.earnings = baseEarnings;
+                break;
+            case 'half-day':
+                attendanceData.earnings = baseEarnings * 0.5;
+                break;
+            case 'absent':
+                attendanceData.earnings = 0;
+                break;
+            default:
+                attendanceData.earnings = 0;
         }
-
-        // Update photographer dropdown
-        function updatePhotographerDropdown() {
-            const select = document.getElementById('photographerName');
-            select.innerHTML = '<option value="">Select Photographer</option>';
-            
-            photographers.forEach(photographer => {
-                const option = document.createElement('option');
-                option.value = photographer.name;
-                option.textContent = photographer.name;
-                select.appendChild(option);
-            });
+        
+        const existingIndex = this.attendanceRecords.findIndex(r => r.id === attendanceData.id);
+        if (existingIndex !== -1) {
+            this.attendanceRecords[existingIndex] = attendanceData;
+        } else {
+            this.attendanceRecords.push(attendanceData);
         }
+        
+        this.saveToLocalStorage();
+        this.refreshAttendanceTable();
+        this.updateSalaryData();
+        document.getElementById('attendanceModal').style.display = 'none';
+        this.showNotification('Attendance recorded successfully!', 'success');
+        
+        if (this.config.autoSync && this.config.googleSheetUrl) {
+            this.syncWithGoogleSheets();
+        }
+    }
 
-        // Load events table
-        function loadEvents() {
-            const tbody = document.getElementById('eventsTableBody');
-            tbody.innerHTML = '';
+    deleteAttendance(recordId) {
+        if (confirm('Are you sure you want to delete this attendance record?')) {
+            this.attendanceRecords = this.attendanceRecords.filter(r => r.id !== recordId);
+            this.saveToLocalStorage();
+            this.refreshAttendanceTable();
+            this.updateSalaryData();
+            this.showNotification('Attendance record deleted successfully!', 'success');
             
-            if (events.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: #666;">No events found</td></tr>';
-                return;
+            if (this.config.autoSync && this.config.googleSheetUrl) {
+                this.syncWithGoogleSheets();
             }
+        }
+    }
+
+    calculateAttendanceEarnings() {
+        const dailyRate = parseFloat(document.getElementById('attendanceDailyRate').value) || 0;
+        const status = document.getElementById('attendanceStatus').value;
+        
+        let earnings = 0;
+        switch (status) {
+            case 'present':
+                earnings = dailyRate;
+                break;
+            case 'half-day':
+                earnings = dailyRate * 0.5;
+                break;
+            case 'absent':
+                earnings = 0;
+                break;
+        }
+        
+        const earningsDisplay = document.getElementById('attendanceEarningsDisplay');
+        if (earningsDisplay) {
+            earningsDisplay.textContent = `${this.config.currencySymbol}${earnings.toFixed(2)}`;
+        }
+    }
+
+    // ===== EXPENSE MANAGEMENT =====
+    showExpenseModal(expenseId = null) {
+        const modal = document.getElementById('expenseModal');
+        const form = document.getElementById('expenseForm');
+        const titleElement = document.getElementById('expenseModalTitle');
+        
+        if (expenseId) {
+            const expense = this.expenseRecords.find(e => e.id === expenseId);
+            if (expense) {
+                titleElement.textContent = 'Edit Expense';
+                this.populateExpenseForm(expense);
+            }
+        } else {
+            titleElement.textContent = 'Add New Expense';
+            form.reset();
+            document.getElementById('expenseId').value = '';
+            document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0];
+        }
+        
+        modal.style.display = 'block';
+    }
+
+    populateExpenseForm(expense) {
+        document.getElementById('expenseId').value = expense.id;
+        document.getElementById('expenseDate').value = expense.date;
+        document.getElementById('expenseCategory').value = expense.category;
+        document.getElementById('expenseDescription').value = expense.description;
+        document.getElementById('expenseAmount').value = expense.amount;
+        document.getElementById('expensePaymentMode').value = expense.paymentMode;
+        document.getElementById('expenseRemarks').value = expense.remarks || '';
+    }
+
+    saveExpense() {
+        const formData = new FormData(document.getElementById('expenseForm'));
+        const expenseData = {
+            id: formData.get('expenseId') || Date.now(),
+            date: formData.get('expenseDate'),
+            category: formData.get('expenseCategory'),
+            description: formData.get('expenseDescription'),
+            amount: parseFloat(formData.get('expenseAmount')) || 0,
+            paymentMode: formData.get('expensePaymentMode'),
+            remarks: formData.get('expenseRemarks') || '',
+            timestamp: new Date().toISOString()
+        };
+        
+        const existingIndex = this.expenseRecords.findIndex(e => e.id === expenseData.id);
+        if (existingIndex !== -1) {
+            this.expenseRecords[existingIndex] = expenseData;
+        } else {
+            this.expenseRecords.push(expenseData);
+        }
+        
+        this.saveToLocalStorage();
+        this.refreshExpenseTable();
+        this.updateDashboardMetrics();
+        document.getElementById('expenseModal').style.display = 'none';
+        this.showNotification('Expense saved successfully!', 'success');
+        
+        if (this.config.autoSync && this.config.googleSheetUrl) {
+            this.syncWithGoogleSheets();
+        }
+    }
+
+    deleteExpense(expenseId) {
+        if (confirm('Are you sure you want to delete this expense?')) {
+            this.expenseRecords = this.expenseRecords.filter(e => e.id !== expenseId);
+            this.saveToLocalStorage();
+            this.refreshExpenseTable();
+            this.updateDashboardMetrics();
+            this.showNotification('Expense deleted successfully!', 'success');
             
-            events.forEach(event => {
+            if (this.config.autoSync && this.config.googleSheetUrl) {
+                this.syncWithGoogleSheets();
+            }
+        }
+    }
+
+    // ===== SALARY MANAGEMENT =====
+    showPaymentModal(photographerId = null) {
+        const modal = document.getElementById('paymentModal');
+        const form = document.getElementById('paymentForm');
+        
+        if (photographerId) {
+            document.getElementById('paymentPhotographer').value = photographerId;
+        }
+        
+        this.populatePhotographerDropdown('paymentPhotographer');
+        document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
+        modal.style.display = 'block';
+    }
+
+    savePayment() {
+        const formData = new FormData(document.getElementById('paymentForm'));
+        const photographerId = parseInt(formData.get('paymentPhotographer'));
+        const photographer = this.photographers.find(p => p.id === photographerId);
+        
+        const paymentData = {
+            id: Date.now(),
+            paymentDate: formData.get('paymentDate'),
+            photographerId: photographerId,
+            photographerName: photographer ? photographer.name : 'Unknown',
+            amount: parseFloat(formData.get('paymentAmount')) || 0,
+            paymentMode: formData.get('paymentMode'),
+            remarks: formData.get('paymentRemarks') || '',
+            timestamp: new Date().toISOString()
+        };
+        
+        this.paymentHistory.push(paymentData);
+        this.saveToLocalStorage();
+        this.updateSalaryData();
+        this.refreshSalaryTable();
+        document.getElementById('paymentModal').style.display = 'none';
+        this.showNotification('Payment recorded successfully!', 'success');
+        
+        if (this.config.autoSync && this.config.googleSheetUrl) {
+            this.syncWithGoogleSheets();
+        }
+    }
+
+    updateSalaryData() {
+        const salaryData = {};
+        
+        // Calculate earnings from events
+        this.events.forEach(event => {
+            const photographerId = parseInt(event.photographer);
+            if (!salaryData[photographerId]) {
+                salaryData[photographerId] = {
+                    totalEarned: 0,
+                    totalPaid: 0,
+                    daysWorked: 0,
+                    lastPaymentDate: null
+                };
+            }
+            salaryData[photographerId].totalEarned += event.salary || 0;
+            salaryData[photographerId].daysWorked += event.duration || 0;
+        });
+        
+        // Calculate earnings from attendance
+        this.attendanceRecords.forEach(record => {
+            const photographerId = record.photographerId;
+            if (!salaryData[photographerId]) {
+                salaryData[photographerId] = {
+                    totalEarned: 0,
+                    totalPaid: 0,
+                    daysWorked: 0,
+                    lastPaymentDate: null
+                };
+            }
+            salaryData[photographerId].totalEarned += record.earnings || 0;
+            if (record.status === 'present') {
+                salaryData[photographerId].daysWorked += 1;
+            } else if (record.status === 'half-day') {
+                salaryData[photographerId].daysWorked += 0.5;
+            }
+        });
+        
+        // Calculate payments
+        this.paymentHistory.forEach(payment => {
+            const photographerId = payment.photographerId;
+            if (!salaryData[photographerId]) {
+                salaryData[photographerId] = {
+                    totalEarned: 0,
+                    totalPaid: 0,
+                    daysWorked: 0,
+                    lastPaymentDate: null
+                };
+            }
+            salaryData[photographerId].totalPaid += payment.amount || 0;
+            if (!salaryData[photographerId].lastPaymentDate || 
+                payment.paymentDate > salaryData[photographerId].lastPaymentDate) {
+                salaryData[photographerId].lastPaymentDate = payment.paymentDate;
+            }
+        });
+        
+        this.salaryData = salaryData;
+        this.saveToLocalStorage();
+    }
+
+    // ===== GOOGLE SHEETS INTEGRATION =====
+    async syncWithGoogleSheets() {
+        if (!this.config.googleSheetUrl) {
+            this.showNotification('Google Sheets URL not configured!', 'error');
+            return;
+        }
+        
+        try {
+            this.showNotification('Syncing with Google Sheets...', 'info');
+            
+            const syncData = {
+                action: 'sync',
+                events: JSON.stringify(this.events),
+                photographers: JSON.stringify(this.photographers),
+                attendance: JSON.stringify(this.attendanceRecords),
+                expenses: JSON.stringify(this.expenseRecords),
+                payments: JSON.stringify(this.paymentHistory),
+                salaryData: JSON.stringify(this.salaryData)
+            };
+            
+            const response = await fetch(this.config.googleSheetUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams(syncData)
+            });
+            
+            if (response.ok) {
+                const result = await response.text();
+                this.showNotification('Data synced successfully!', 'success');
+                localStorage.setItem('lastSyncTime', new Date().toISOString());
+            } else {
+                throw new Error('Sync failed');
+            }
+        } catch (error) {
+            console.error('Sync error:', error);
+            this.showNotification('Sync failed. Please check your connection.', 'error');
+        }
+    }
+
+    async loadFromGoogleSheets() {
+        if (!this.config.googleSheetUrl) {
+            this.showNotification('Google Sheets URL not configured!', 'error');
+            return;
+        }
+        
+        try {
+            this.showNotification('Loading data from Google Sheets...', 'info');
+            
+            const response = await fetch(`${this.config.googleSheetUrl}?action=load`);
+            
+            if (response.ok) {
+                const data = await response.json();
+                
+                if (data.events) this.events = data.events;
+                if (data.photographers) this.photographers = data.photographers;
+                if (data.attendance) this.attendanceRecords = data.attendance;
+                if (data.expenses) this.expenseRecords = data.expenses;
+                if (data.payments) this.paymentHistory = data.payments;
+                if (data.salaryData) this.salaryData = data.salaryData;
+                
+                this.saveToLocalStorage();
+                this.loadDashboard();
+                this.showNotification('Data loaded successfully!', 'success');
+            } else {
+                throw new Error('Load failed');
+            }
+        } catch (error) {
+            console.error('Load error:', error);
+            this.showNotification('Failed to load data from Google Sheets.', 'error');
+        }
+    }
+
+    // ===== UI MANAGEMENT =====
+    showSection(sectionId) {
+        // Hide all sections
+        document.querySelectorAll('.section').forEach(section => {
+            section.classList.remove('active');
+        });
+        
+        // Show selected section
+        const targetSection = document.getElementById(sectionId);
+        if (targetSection) {
+            targetSection.classList.add('active');
+        }
+        
+        // Update navigation
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.classList.remove('active');
+        });
+        
+        const activeLink = document.querySelector(`[data-target="${sectionId}"]`);
+        if (activeLink) {
+            activeLink.classList.add('active');
+        }
+        
+        // Refresh section-specific data
+        switch (sectionId) {
+            case 'eventsSection':
+                this.refreshEventTables();
+                break;
+            case 'photographersSection':
+                this.refreshPhotographerTable();
+                break;
+            case 'attendanceSection':
+                this.refreshAttendanceTable();
+                break;
+            case 'expensesSection':
+                this.refreshExpenseTable();
+                break;
+            case 'salarySection':
+                this.refreshSalaryTable();
+                break;
+            case 'dashboardSection':
+                this.loadDashboard();
+                break;
+        }
+    }
+    showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        
+        // Automatically remove notification after 5 seconds
+        setTimeout(() => {
+            notification.remove();
+        }, 5000);
+    }
+    toggleTheme() {
+        const body = document.body;
+        body.classList.toggle('dark-mode');
+        this.config.darkMode = body.classList.contains('dark-mode');
+        localStorage.setItem('darkMode', this.config.darkMode);
+        
+        this.showNotification(`Theme switched to ${this.config.darkMode ? 'Dark' : 'Light'} mode`, 'info');
+    }
+    saveToLocalStorage() {
+        localStorage.setItem('events', JSON.stringify(this.events));
+        localStorage.setItem('photographers', JSON.stringify(this.photographers));
+        localStorage.setItem('attendanceRecords', JSON.stringify(this.attendanceRecords));
+        localStorage.setItem('expenses', JSON.stringify(this.expenseRecords));
+        localStorage.setItem('payments', JSON.stringify(this.paymentHistory));
+        localStorage.setItem('salaryData', JSON.stringify(this.salaryData));
+    }
+    loadDashboard() {
+        // Load dashboard metrics and render summary
+        this.updateDashboardMetrics();
+        this.renderSummaryDashboard();
+    }
+    updateDashboardMetrics() {
+        const totalEvents = this.events.length;
+        const totalPhotographers = this.photographers.length;
+        const totalAttendance = this.attendanceRecords.length;
+        const totalExpenses = this.expenseRecords.reduce((sum, e) => sum + (e.amount || 0), 0);
+        const totalPayments = this.paymentHistory.reduce((sum, p) => sum + (p.amount || 0), 0);
+        const totalEarnings = Object.values(this.salaryData).reduce((sum, data) => sum + (data.totalEarned || 0), 0);
+        const totalProfit = totalEarnings - totalExpenses - totalPayments;
+        const lastSyncTime = localStorage.getItem('lastSyncTime') || 'Never';
+        const dashboardMetrics = {
+            totalEvents,
+            totalPhotographers,
+            totalAttendance,
+            totalExpenses: `${this.config.currencySymbol}${totalExpenses.toFixed(2)}`,
+            totalPayments: `${this.config.currencySymbol}${totalPayments.toFixed(2)}`,
+            totalEarnings: `${this.config.currencySymbol}${totalEarnings.toFixed(2)}`,
+            totalProfit: `${this.config.currencySymbol}${totalProfit.toFixed(2)}`,
+            lastSyncTime
+        };
+        const dashboardElement = document.getElementById('dashboardMetrics');
+        if (dashboardElement) {
+            dashboardElement.innerHTML = `
+                <h2>Dashboard Metrics</h2>
+                <ul>
+                    <li>Total Events: ${dashboardMetrics.totalEvents}</li>
+                    <li>Total Photographers: ${dashboardMetrics.totalPhotographers}</li>
+                    <li>Total Attendance Records: ${dashboardMetrics.totalAttendance}</li>
+                    <li>Total Expenses: ${dashboardMetrics.totalExpenses}</li>
+                    <li>Total Payments: ${dashboardMetrics.totalPayments}</li>
+                    <li>Total Earnings: ${dashboardMetrics.totalEarnings}</li>
+                    <li>Total Profit: ${dashboardMetrics.totalProfit}</li>
+                    <li>Last Sync Time: ${dashboardMetrics.lastSyncTime}</li>
+                </ul>
+            `;
+        }
+    }
+    renderSummaryDashboard() {
+        const summaryElement = document.getElementById('summaryDashboard');
+        if (!summaryElement) return;
+        summaryElement.innerHTML = '';
+        const totalEvents = this.events.length;
+        const totalPhotographers = this.photographers.length;
+        const totalAttendance = this.attendanceRecords.length;
+        const totalExpenses = this.expenseRecords.reduce((sum, e) => sum + (e.amount || 0), 0);
+        const totalPayments = this.paymentHistory.reduce((sum, p) => sum + (p.amount || 0), 0);
+        const totalEarnings = Object.values(this.salaryData).reduce((sum, data) => sum + (data.totalEarned || 0), 0);
+        const totalProfit = totalEarnings - totalExpenses - totalPayments;
+        const lastSyncTime = localStorage.getItem('lastSyncTime') || 'Never';
+        summaryElement.innerHTML = `
+            <h2>Summary Dashboard</h2>
+            <ul>
+                <li>Total Events: ${totalEvents}</li>
+                <li>Total Photographers: ${totalPhotographers}</li>
+                <li>Total Attendance Records: ${totalAttendance}</li>
+                <li>Total Expenses: ${this.config.currencySymbol}${totalExpenses.toFixed(2)}</li>
+                <li>Total Payments: ${this.config.currencySymbol}${totalPayments.toFixed(2)}</li>
+                <li>Total Earnings: ${this.config.currencySymbol}${totalEarnings.toFixed(2)}</li>
+                <li>Total Profit: ${this.config.currencySymbol}${totalProfit.toFixed(2)}</li>
+                <li>Last Sync Time: ${lastSyncTime}</li>
+            </ul>
+        `;
+    }
+    refreshEventTables() {
+        const completedEventsTable = document.getElementById('completedEventsTable');
+        const upcomingEventsTable = document.getElementById('upcomingEventsTable');
+        if (completedEventsTable) {
+            completedEventsTable.innerHTML = '';
+            this.events.filter(e => e.status === 'completed').forEach(event => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${event.name}</td>
-                    <td>${new Date(event.date).toLocaleDateString()}</td>
+                    <td>${event.date}</td>
                     <td>${event.type}</td>
-                    <td>₹${event.prize.toLocaleString()}</td>
-                    <td>₹${event.expenses.toLocaleString()}</td>
-                    <td>${event.photographer}</td>
-                    <td>₹${event.salary.toLocaleString()}</td>
+                    <td>${this.config.currencySymbol}${event.prize.toFixed(2)}</td>
+                    <td>${this.config.currencySymbol}${event.expenses.toFixed(2)}</td>
+                    <td>${event.photographerName}</td>
+                    <td>${this.config.currencySymbol}${event.salary.toFixed(2)}</td>
                     <td>${event.duration} days</td>
-                    <td style="color: ${event.profit >= 0 ? 'green' : 'red'}">₹${event.profit.toLocaleString()}</td>
+                    <td>${event.profit >= 0 ? `<span class="profit-positive">${this.config.currencySymbol}${event.profit.toFixed(2)}</span>` : `<span class="profit-negative">${this.config.currencySymbol}${event.profit.toFixed(2)}</span>`}</td>
                     <td>
-                        <button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px;" onclick="deleteEvent(${event.id})">Delete</button>
+                        <button class="btn btn-primary" onclick="app.showEventModal(${event.id})">Edit</button>
+                        <button class="btn btn-danger" onclick="app.deleteEvent(${event.id})">Delete</button>
                     </td>
                 `;
-                tbody.appendChild(row);
+                completedEventsTable.appendChild(row);
             });
         }
-
-        // Load photographers table
-        function loadPhotographers() {
-            const tbody = document.getElementById('photographersTableBody');
-            tbody.innerHTML = '';
-            
-            if (photographers.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #666;">No photographers found</td></tr>';
-                return;
-            }
-            
-            photographers.forEach(photographer => {
+        if (upcomingEventsTable) {
+            upcomingEventsTable.innerHTML = '';
+            this.events.filter(e => e.status === 'upcoming').forEach(event => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${event.name}</td>
+                    <td>${event.date}</td>
+                    <td>${event.type}</td>
+                    <td>${this.config.currencySymbol}${event.prize.toFixed(2)}</td>
+                    <td>${event.photographerName}</td>
+                    <td>${event.duration} days</td>
+                    <td>
+                        <button class="btn btn-primary" onclick="app.showEventModal(${event.id})">Edit</button>
+                        <button class="btn btn-danger" onclick="app.deleteEvent(${event.id})">Delete</button>
+                    </td>
+                `;
+                upcomingEventsTable.appendChild(row);
+            });
+        }
+    }
+    refreshPhotographerTable() {
+        const photographerTable = document.getElementById('photographerTable');
+        if (photographerTable) {
+            photographerTable.innerHTML = '';
+            this.photographers.forEach(photographer => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${photographer.name}</td>
                     <td>${photographer.contact}</td>
-                    <td>${photographer.email}</td>
-                    <td>₹${photographer.rate.toLocaleString()}</td>
+                    <td>${photographer.email || 'N/A'}</td>
+                    <td>${this.config.currencySymbol}${photographer.rate.toFixed(2)}</td>
                     <td>
-                        <button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px;" onclick="deletePhotographer(${photographer.id})">Delete</button>
+                        <button class="btn btn-primary" onclick="app.showPhotographerModal(${photographer.id})">Edit</button>
+                        <button class="btn btn-danger" onclick="app.deletePhotographer(${photographer.id})">Delete</button>
                     </td>
                 `;
-                tbody.appendChild(row);
+                photographerTable.appendChild(row);
             });
         }
-
-        // Update dashboard
-        function updateDashboard() {
-            const totalEvents = events.length;
-            const totalRevenue = events.reduce((sum, event) => sum + event.prize, 0);
-            const totalExpenses = events.reduce((sum, event) => sum + event.expenses + event.salary, 0);
-            const netProfit = totalRevenue - totalExpenses;
-            
-            document.getElementById('totalEvents').textContent = totalEvents;
-            document.getElementById('totalRevenue').textContent = '₹' + totalRevenue.toLocaleString();
-            document.getElementById('totalExpenses').textContent = '₹' + totalExpenses.toLocaleString();
-            document.getElementById('netProfit').textContent = '₹' + netProfit.toLocaleString();
-            
-            // Update recent events
-            const recentEvents = events.slice(-5).reverse();
-            const tbody = document.getElementById('recentEventsBody');
-            tbody.innerHTML = '';
-            
-            if (recentEvents.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #666;">No events found</td></tr>';
-            } else {
-                recentEvents.forEach(event => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${event.name}</td>
-                        <td>${new Date(event.date).toLocaleDateString()}</td>
-                        <td>₹${event.prize.toLocaleString()}</td>
-                        <td>${event.photographer}</td>
-                        <td><span class="status-indicator status-connected">Completed</span></td>
-                    `;
-                    tbody.appendChild(row);
-                });
-            }
-        }
-
-        // Update analytics
-        function updateAnalytics() {
-            const avgEventValue = events.length > 0 ? events.reduce((sum, event) => sum + event.prize, 0) / events.length : 0;
-            const currentMonth = new Date().getMonth();
-            const currentYear = new Date().getFullYear();
-            const monthRevenue = events.filter(event => {
-                const eventDate = new Date(event.date);
-                return eventDate.getMonth() === currentMonth && eventDate.getFullYear() === currentYear;
-            }).reduce((sum, event) => sum + event.prize, 0);
-            
-            const eventTypes = {};
-            events.forEach(event => {
-                eventTypes[event.type] = (eventTypes[event.type] || 0) + 1;
-            });
-            
-            const popularEventType = Object.keys(eventTypes).length > 0 ? 
-                Object.keys(eventTypes).reduce((a, b) => eventTypes[a] > eventTypes[b] ? a : b) : '-';
-            
-            const totalEventDays = events.reduce((sum, event) => sum + event.duration, 0);
-            
-            document.getElementById('avgEventValue').textContent = '₹' + Math.round(avgEventValue).toLocaleString();
-            document.getElementById('monthRevenue').textContent = '₹' + monthRevenue.toLocaleString();
-            document.getElementById('popularEventType').textContent = popularEventType;
-            document.getElementById('totalEventDays').textContent = totalEventDays;
-        }
-
-        function loadSalaryManagement() {
-    updatePhotographerDropdowns();
-    loadAttendanceTable();
-    
-    // Set default dates
-    document.getElementById('attendanceDate').valueAsDate = new Date();
-    document.getElementById('paymentDate').valueAsDate = new Date();
-}
-
-function updatePhotographerDropdowns() {
-    const dropdowns = ['attendancePhotographer', 'paymentPhotographer', 'attendanceFilterPhotographer'];
-    
-    dropdowns.forEach(dropdownId => {
-        const select = document.getElementById(dropdownId);
-        const currentValue = select.value;
-        select.innerHTML = dropdownId.includes('Filter') ? 
-            '<option value="">All Photographers</option>' : 
-            '<option value="">Select Photographer</option>';
-        
-        photographers.forEach(photographer => {
-            if (photographer.name !== 'Self' || photographer.rate > 0) {
-                const option = document.createElement('option');
-                option.value = photographer.name;
-                option.textContent = photographer.name;
-                select.appendChild(option);
-            }
-        });
-        
-        select.value = currentValue;
-    });
-}
-
-function loadAttendanceTable() {
-    const tbody = document.getElementById('attendanceTableBody');
-    tbody.innerHTML = '';
-    
-    if (attendanceRecords.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #666;">No attendance records found</td></tr>';
-        return;
     }
-    
-    const sortedRecords = attendanceRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
-    
-    sortedRecords.forEach(record => {
-        const photographer = photographers.find(p => p.name === record.photographer);
-        const dailyRate = photographer ? photographer.rate : 0;
-        let earnings = 0;
-        
-        if (record.status === 'Present') {
-            earnings = dailyRate;
-        } else if (record.status === 'Half-Day') {
-            earnings = dailyRate / 2;
-        }
-        
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${record.photographer}</td>
-            <td>${new Date(record.date).toLocaleDateString()}</td>
-            <td><span class="status-indicator ${record.status === 'Present' ? 'status-connected' : record.status === 'Half-Day' ? 'status-warning' : 'status-disconnected'}">${record.status}</span></td>
-            <td>₹${dailyRate.toLocaleString()}</td>
-            <td>₹${earnings.toLocaleString()}</td>
-            <td>${record.notes}</td>
-            <td>
-                <button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px;" onclick="deleteAttendance(${record.id})">Delete</button>
-            </td>
-        `;
-        tbody.appendChild(row);
-    });
-}
-
-function loadExpenseTracker() {
-    loadExpenseTable();
-    
-    // Set default date
-    document.getElementById('expenseDate').valueAsDate = new Date();
-}
-
-function loadExpenseTable() {
-    const tbody = document.getElementById('expenseTableBody');
-    tbody.innerHTML = '';
-    
-    if (expenses.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #666;">No expense records found</td></tr>';
-        return;
-    }
-    
-    const sortedExpenses = expenses.sort((a, b) => new Date(b.date) - new Date(a.date));
-    
-    sortedExpenses.forEach(expense => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${new Date(expense.date).toLocaleDateString()}</td>
-            <td>${expense.category}</td>
-            <td>${expense.description}</td>
-            <td>₹${expense.amount.toLocaleString()}</td>
-            <td>${expense.paymentMode}</td>
-            <td>${expense.remarks}</td>
-            <td>
-                <button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px;" onclick="deleteExpense(${expense.id})">Delete</button>
-            </td>
-        `;
-        tbody.appendChild(row);
-    });
-}
-
-function loadSalaryDashboard() {
-    updateSalaryStats();
-    loadSalaryDashboardTable();
-    loadExpenseBreakdown();
-}
-
-function updateSalaryStats() {
-    // Calculate total salary earned
-    const totalEarned = attendanceRecords.reduce((sum, record) => {
-        const photographer = photographers.find(p => p.name === record.photographer);
-        const dailyRate = photographer ? photographer.rate : 0;
-        
-        if (record.status === 'Present') {
-            return sum + dailyRate;
-        } else if (record.status === 'Half-Day') {
-            return sum + (dailyRate / 2);
-        }
-        return sum;
-    }, 0);
-    
-    // Calculate total salary paid
-    const totalPaid = salaryPayments.reduce((sum, payment) => sum + payment.amount, 0);
-    
-    // Calculate outstanding salary
-    const outstanding = totalEarned - totalPaid;
-    
-    // Calculate total expenses
-    const totalExpensesAmount = expenses.reduce((sum, expense) => sum + expense.amount, 0);
-    
-    document.getElementById('totalSalaryEarned').textContent = '₹' + totalEarned.toLocaleString();
-    document.getElementById('totalSalaryPaid').textContent = '₹' + totalPaid.toLocaleString();
-    document.getElementById('outstandingSalary').textContent = '₹' + outstanding.toLocaleString();
-    document.getElementById('totalExpensesAmount').textContent = '₹' + totalExpensesAmount.toLocaleString();
-}
-
-function loadSalaryDashboardTable() {
-    const tbody = document.getElementById('salaryDashboardTableBody');
-    tbody.innerHTML = '';
-    
-    const photographerSummary = {};
-    
-    // Calculate earnings for each photographer
-    attendanceRecords.forEach(record => {
-        if (!photographerSummary[record.photographer]) {
-            photographerSummary[record.photographer] = {
-                name: record.photographer,
-                daysWorked: 0,
-                totalEarned: 0,
-                totalPaid: 0,
-                lastPayment: null
-            };
-        }
-        
-        const photographer = photographers.find(p => p.name === record.photographer);
-        const dailyRate = photographer ? photographer.rate : 0;
-        
-        if (record.status === 'Present') {
-            photographerSummary[record.photographer].daysWorked += 1;
-            photographerSummary[record.photographer].totalEarned += dailyRate;
-        } else if (record.status === 'Half-Day') {
-            photographerSummary[record.photographer].daysWorked += 0.5;
-            photographerSummary[record.photographer].totalEarned += (dailyRate / 2);
-        }
-    });
-    
-    // Calculate payments for each photographer
-    salaryPayments.forEach(payment => {
-        if (photographerSummary[payment.photographer]) {
-            photographerSummary[payment.photographer].totalPaid += payment.amount;
-            if (!photographerSummary[payment.photographer].lastPayment || 
-                new Date(payment.date) > new Date(photographerSummary[payment.photographer].lastPayment)) {
-                photographerSummary[payment.photographer].lastPayment = payment.date;
-            }
-        }
-    });
-    
-    if (Object.keys(photographerSummary).length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #666;">No salary data found</td></tr>';
-        return;
-    }
-    
-    Object.values(photographerSummary).forEach(summary => {
-        const outstanding = summary.totalEarned - summary.totalPaid;
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${summary.name}</td>
-            <td>${summary.daysWorked}</td>
-            <td>₹${summary.totalEarned.toLocaleString()}</td>
-            <td>₹${summary.totalPaid.toLocaleString()}</td>
-            <td style="color: ${outstanding > 0 ? 'red' : 'green'}">₹${outstanding.toLocaleString()}</td>
-            <td>${summary.lastPayment ? new Date(summary.lastPayment).toLocaleDateString() : 'Never'}</td>
-        `;
-        tbody.appendChild(row);
-    });
-}
-
-function loadExpenseBreakdown() {
-    const breakdownDiv = document.getElementById('expenseBreakdown');
-    
-    if (expenses.length === 0) {
-        breakdownDiv.innerHTML = '<p style="text-align: center; color: #666;">No expense data found</p>';
-        return;
-    }
-    
-    const categoryTotals = {};
-    expenses.forEach(expense => {
-        categoryTotals[expense.category] = (categoryTotals[expense.category] || 0) + expense.amount;
-    });
-    
-    const totalExpenses = Object.values(categoryTotals).reduce((sum, amount) => sum + amount, 0);
-    
-    let html = '<div class="expense-breakdown-grid">';
-    Object.entries(categoryTotals).forEach(([category, amount]) => {
-        const percentage = ((amount / totalExpenses) * 100).toFixed(1);
-        html += `
-            <div class="expense-category">
-                <div class="category-header">
-                    <span class="category-name">${category}</span>
-                    <span class="category-amount">₹${amount.toLocaleString()}</span>
-                </div>
-                <div class="category-bar">
-                    <div class="category-progress" style="width: ${percentage}%"></div>
-                </div>
-                <div class="category-percentage">${percentage}%</div>
-            </div>
-        `;
-    });
-    html += '</div>';
-    
-    breakdownDiv.innerHTML = html;
-}
-
-// Delete functions
-function deleteAttendance(id) {
-    if (confirm('Are you sure you want to delete this attendance record?')) {
-        attendanceRecords = attendanceRecords.filter(record => record.id !== id);
-        saveDataLocally();
-        loadAttendanceTable();
-        loadSalaryDashboard();
-        showNotification('Attendance record deleted successfully!', 'success');
-    }
-}
-
-function deleteExpense(id) {
-    if (confirm('Are you sure you want to delete this expense record?')) {
-        expenses = expenses.filter(expense => expense.id !== id);
-        saveDataLocally();
-        loadExpenseTable();
-        loadSalaryDashboard();
-        showNotification('Expense record deleted successfully!', 'success');
-    }
-}
-
-
-        // Utility functions
-        function clearForm() {
-            document.getElementById('eventForm').reset();
-        }
-
-        function deleteEvent(id) {
-            if (confirm('Are you sure you want to delete this event?')) {
-                events = events.filter(event => event.id !== id);
-                localStorage.setItem('rn_studio_events', JSON.stringify(events));
-                loadEvents();
-                updateDashboard();
-            }
-        }
-
-        function deletePhotographer(id) {
-            if (confirm('Are you sure you want to delete this photographer?')) {
-                photographers = photographers.filter(photographer => photographer.id !== id);
-                localStorage.setItem('rn_studio_photographers', JSON.stringify(photographers));
-                updatePhotographerDropdown();
-                loadPhotographers();
-            }
-        }
-
-        // Search and filter functions
-        document.getElementById('searchEvents').addEventListener('input', function() {
-            filterEvents();
-        });
-
-        document.getElementById('filterType').addEventListener('change', function() {
-            filterEvents();
-        });
-
-        function filterEvents() {
-            const searchTerm = document.getElementById('searchEvents').value.toLowerCase();
-            const filterType = document.getElementById('filterType').value;
-            
-            let filteredEvents = events;
-            
-            if (searchTerm) {
-                filteredEvents = filteredEvents.filter(event => 
-                    event.name.toLowerCase().includes(searchTerm) ||
-                    event.photographer.toLowerCase().includes(searchTerm)
-                );
-            }
-            
-            if (filterType) {
-                filteredEvents = filteredEvents.filter(event => event.type === filterType);
-            }
-            
-            displayFilteredEvents(filteredEvents);
-        }
-
-        function displayFilteredEvents(filteredEvents) {
-            const tbody = document.getElementById('eventsTableBody');
-            tbody.innerHTML = '';
-            
-            if (filteredEvents.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: #666;">No events found</td></tr>';
-                return;
-            }
-            
-            filteredEvents.forEach(event => {
+    refreshAttendanceTable() {
+        const attendanceTable = document.getElementById('attendanceTable');
+        if (attendanceTable) {
+            attendanceTable.innerHTML = '';
+            this.attendanceRecords.forEach(record => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${event.name}</td>
-                    <td>${new Date(event.date).toLocaleDateString()}</td>
-                    <td>${event.type}</td>
-                    <td>₹${event.prize.toLocaleString()}</td>
-                    <td>₹${event.expenses.toLocaleString()}</td>
-                    <td>${event.photographer}</td>
-                    <td>₹${event.salary.toLocaleString()}</td>
-                    <td>${event.duration} days</td>
-                    <td style="color: ${event.profit >= 0 ? 'green' : 'red'}">₹${event.profit.toLocaleString()}</td>
+                    <td>${record.date}</td>
+                    <td>${record.photographerName}</td>
+                    <td>${record.status}</td>
+                    <td>${this.config.currencySymbol}${record.dailyRate.toFixed(2)}</td>
+                    <td>${this.config.currencySymbol}${record.earnings.toFixed(2)}</td>
                     <td>
-                        <button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px;" onclick="deleteEvent(${event.id})">Delete</button>
+                        <button class="btn btn-primary" onclick="app.showAttendanceModal(${record.id})">Edit</button>
+                        <button class="btn btn-danger" onclick="app.deleteAttendance(${record.id})">Delete</button>
                     </td>
                 `;
-                tbody.appendChild(row);
+                attendanceTable.appendChild(row);
             });
         }
-
-        // Google Sheets integration
-        function connectGoogleSheets() {
-    const url = document.getElementById('googleSheetUrl').value;
-    if (!url) {
-        alert('Please enter the Google Apps Script URL');
-        return;
     }
-    
-    // Store the URL
-    localStorage.setItem('rn_studio_sheets_url', url);
-    sheetsUrl = url;
-    
-    // First check if data already exists in sheets
-    checkSheetsData().then(hasData => {
-        if (hasData) {
-            // Data exists in sheets, ask user what to do
-            const choice = confirm(
-                'Data already exists in Google Sheets. Click OK to load data from sheets, or Cancel to upload your local data to sheets.'
-            );
-            
-            if (choice) {
-                // Load from sheets
-                loadFromGoogleSheets();
-            } else {
-                // Upload local data to sheets
-                uploadLocalDataToSheets();
-            }
-        } else {
-            // No data in sheets, upload local data
-            uploadLocalDataToSheets();
-        }
-        
-        // Update UI
-        updateConnectionStatus(true);
-    }).catch(error => {
-        console.error('Error connecting to Google Sheets:', error);
-        // Still mark as connected for sync purposes
-        updateConnectionStatus(true);
-        // Upload local data as fallback
-        uploadLocalDataToSheets();
-    });
-}
-function checkSheetsData() {
-    return new Promise((resolve, reject) => {
-        const url = localStorage.getItem('rn_studio_sheets_url');
-        if (!url) {
-            reject('No URL configured');
-            return;
-        }
-        
-        const callback = 'checkDataCallback' + Date.now();
-        
-        // Create JSONP callback
-        window[callback] = function(data) {
-            resolve(data.hasData);
-            delete window[callback];
-            document.body.removeChild(script);
-        };
-        
-        // Create script tag for JSONP
-        const script = document.createElement('script');
-        script.src = url + '?action=checkData&callback=' + callback;
-        script.onerror = () => {
-            reject('Failed to check sheets data');
-            delete window[callback];
-            document.body.removeChild(script);
-        };
-        
-        document.body.appendChild(script);
-    });
-}
-
-function updateConnectionStatus(connected) {
-    const statusElement = document.getElementById('connectionStatus');
-    const manualSyncBtn = document.getElementById('manualSyncBtn');
-    const loadFromSheetsBtn = document.getElementById('loadFromSheetsBtn');
-    
-    if (connected) {
-        statusElement.textContent = 'Connected';
-        statusElement.className = 'status-indicator status-connected';
-        manualSyncBtn.disabled = false;
-        loadFromSheetsBtn.disabled = false;
-        isConnectedToSheets = true;
-        showNotification('Connected to Google Sheets successfully!', 'success');
-    } else {
-        statusElement.textContent = 'Disconnected';
-        statusElement.className = 'status-indicator status-disconnected';
-        manualSyncBtn.disabled = true;
-        loadFromSheetsBtn.disabled = true;
-        isConnectedToSheets = false;
-    }
-}
-
-function uploadLocalDataToSheets() {
-    if (events.length === 0 && photographers.length <= 1) {
-        showNotification('No local data to upload', 'info');
-        return;
-    }
-    
-    showNotification('Uploading local data to Google Sheets...', 'info');
-    syncToGoogleSheets(false, true); // false = no manual notification, true = initial upload
-}
-
-        // Data management functions
-       function exportData() {
-    const data = {
-        events: events,
-        photographers: photographers,
-        attendanceRecords: attendanceRecords,
-        salaryPayments: salaryPayments,
-        expenses: expenses,
-        exportDate: new Date().toISOString()
-    };
-    
-    const dataStr = JSON.stringify(data, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    
-    const exportFileDefaultName = 'rn_studio_backup_' + new Date().toISOString().split('T')[0] + '.json';
-    
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
-}
-
-// Update the importData function to handle new data
-function importData() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
-    input.onchange = function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const data = JSON.parse(e.target.result);
-                if (data.events && data.photographers) {
-                    if (confirm('This will replace all current data. Are you sure?')) {
-                        events = data.events;
-                        photographers = data.photographers;
-                        attendanceRecords = data.attendanceRecords || [];
-                        salaryPayments = data.salaryPayments || [];
-                        expenses = data.expenses || [];
-                        
-                        saveDataLocally();
-                        updatePhotographerDropdown();
-                        updateDashboard();
-                        loadEvents();
-                        loadPhotographers();
-                        loadSalaryManagement();
-                        loadExpenseTracker();
-                        loadSalaryDashboard();
-                        
-                        showNotification('Data imported successfully!', 'success');
-                    }
-                } else {
-                    alert('Invalid backup file format.');
-                }
-            } catch (error) {
-                alert('Error reading backup file.');
-            }
-        };
-        reader.readAsText(file);
-    };
-    input.click();
-}
-
-// Update the clearAllData function to include new data
-function clearAllData() {
-    if (confirm('This will permanently delete all your data. Are you sure?')) {
-        if (confirm('Last chance! This action cannot be undone.')) {
-            events = [];
-            photographers = [{id: 1, name: 'Self', contact: '', email: '', rate: 0}];
-            attendanceRecords = [];
-            salaryPayments = [];
-            expenses = [];
-            
-            saveDataLocally();
-            updatePhotographerDropdown();
-            updateDashboard();
-            loadEvents();
-            loadPhotographers();
-            loadSalaryManagement();
-            loadExpenseTracker();
-            loadSalaryDashboard();
-            
-            showNotification('All data cleared successfully!', 'success');
-        }
-    }
-}
-        // Update the syncToGoogleSheets function to include new data
-function syncToGoogleSheets(manual = false, initialUpload = false) {
-    const url = localStorage.getItem('rn_studio_sheets_url');
-    if (!url) {
-        if (manual) {
-            showNotification('Google Sheets not configured', 'error');
-        }
-        return;
-    }
-    
-    // Create hidden iframe to prevent page navigation
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    iframe.name = 'syncFrame';
-    document.body.appendChild(iframe);
-    
-    // Use form submission to hidden iframe
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = url;
-    form.target = 'syncFrame';
-    form.style.display = 'none';
-    
-    const actionInput = document.createElement('input');
-    actionInput.type = 'hidden';
-    actionInput.name = 'action';
-    actionInput.value = 'sync';
-    form.appendChild(actionInput);
-    
-    const eventsInput = document.createElement('input');
-    eventsInput.type = 'hidden';
-    eventsInput.name = 'events';
-    eventsInput.value = JSON.stringify(events);
-    form.appendChild(eventsInput);
-    
-    const photographersInput = document.createElement('input');
-    photographersInput.type = 'hidden';
-    photographersInput.name = 'photographers';
-    photographersInput.value = JSON.stringify(photographers);
-    form.appendChild(photographersInput);
-    
-    // Add new data inputs
-    const attendanceInput = document.createElement('input');
-    attendanceInput.type = 'hidden';
-    attendanceInput.name = 'attendanceRecords';
-    attendanceInput.value = JSON.stringify(attendanceRecords);
-    form.appendChild(attendanceInput);
-    
-    const salaryInput = document.createElement('input');
-    salaryInput.type = 'hidden';
-    salaryInput.name = 'salaryPayments';
-    salaryInput.value = JSON.stringify(salaryPayments);
-    form.appendChild(salaryInput);
-    
-    const expensesInput = document.createElement('input');
-    expensesInput.type = 'hidden';
-    expensesInput.name = 'expenses';
-    expensesInput.value = JSON.stringify(expenses);
-    form.appendChild(expensesInput);
-    
-    document.body.appendChild(form);
-    form.submit();
-    
-    // Clean up after a delay
-    setTimeout(() => {
-        if (document.body.contains(form)) document.body.removeChild(form);
-        if (document.body.contains(iframe)) document.body.removeChild(iframe);
-    }, 2000);
-    
-    // Show appropriate notification
-    if (manual) {
-        showNotification('Data synced to Google Sheets!', 'success');
-    } else if (initialUpload) {
-        showNotification('Local data uploaded to Google Sheets!', 'success');
-    }
-}
-
-        // Auto-sync when data changes
-        function saveAndSync() {
-            localStorage.setItem('rn_studio_events', JSON.stringify(events));
-            localStorage.setItem('rn_studio_photographers', JSON.stringify(photographers));
-            syncToGoogleSheets();
-        }
-
-        // Enhanced form validation
-        document.getElementById('eventForm').addEventListener('input', function(e) {
-            const target = e.target;
-            if (target.name === 'photographerName' && target.value) {
-                const photographer = photographers.find(p => p.name === target.value);
-                if (photographer && photographer.rate > 0) {
-                    document.getElementById('photographerSalary').value = photographer.rate;
-                }
-            }
-        });
-
-
-        // Load data from Google Sheets
-function loadFromGoogleSheets() {
-    return new Promise((resolve, reject) => {
-        const url = localStorage.getItem('rn_studio_sheets_url');
-        if (!url) {
-            reject('Google Sheets not configured');
-            return;
-        }
-        
-        const callback = 'loadDataCallback' + Date.now();
-        
-        // Create JSONP callback
-        window[callback] = function(data) {
-            try {
-                if (data.events && data.photographers) {
-                    events = data.events;
-                    photographers = data.photographers;
-                    attendanceRecords = data.attendanceRecords || [];
-                    salaryPayments = data.salaryPayments || [];
-                    expenses = data.expenses || [];
-                    
-                    saveDataLocally();
-                    updatePhotographerDropdown();
-                    updateDashboard();
-                    loadEvents();
-                    loadPhotographers();
-                    loadSalaryManagement();
-                    loadExpenseTracker();
-                    loadSalaryDashboard();
-                    
-                    showNotification('Data loaded from Google Sheets successfully!', 'success');
-                    resolve(data);
-                } else {
-                    reject('Invalid data format');
-                }
-            } catch (error) {
-                reject('Error processing data: ' + error.message);
-            }
-            
-            delete window[callback];
-            document.body.removeChild(script);
-        };
-        
-        // Create script tag for JSONP
-        const script = document.createElement('script');
-        script.src = url + '?action=load&callback=' + callback;
-        script.onerror = () => {
-            reject('Failed to load data from Google Sheets');
-            delete window[callback];
-            if (document.body.contains(script)) {
-                document.body.removeChild(script);
-            }
-        };
-        
-        document.body.appendChild(script);
-    });
-}
-
-        // Add keyboard shortcuts
-        document.addEventListener('keydown', function(e) {
-            if (e.ctrlKey || e.metaKey) {
-                switch(e.key) {
-                    case 'n':
-                        e.preventDefault();
-                        showTab('add-event');
-                        break;
-                    case 'e':
-                        e.preventDefault();
-                        exportData();
-                        break;
-                    case 's':
-                        e.preventDefault();
-                        syncToGoogleSheets();
-                        break;
-                }
-            }
-        });
-
-function initializeApp() {
-    updatePhotographerDropdown();
-    updateDashboard();
-    
-    // Check for Google Sheets connection
-    const storedSheetsUrl = localStorage.getItem('rn_studio_sheets_url');
-    if (storedSheetsUrl) {
-        document.getElementById('googleSheetUrl').value = storedSheetsUrl;
-        sheetsUrl = storedSheetsUrl;
-        updateConnectionStatus(true);
-        
-        // Don't automatically load from sheets on startup
-        // Let user decide when to sync
-        console.log('Google Sheets URL found, ready for manual sync');
-    }
-}
-        // Auto-save every 5 minutes (300000 ms) - less annoying
-setInterval(() => {
-    localStorage.setItem('rn_studio_events', JSON.stringify(events));
-    localStorage.setItem('rn_studio_photographers', JSON.stringify(photographers));
-    syncToGoogleSheets(); // No notification for auto-sync
-}, 300000);
-
-        // Initialize when page loads
-        window.addEventListener('load', initializeApp);
-        
-        // Handle page unload
-        window.addEventListener('beforeunload', function() {
-            saveAndSync();
-        });
-
-        // Add notification system
-        function showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.textContent = message;
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                padding: 15px 20px;
-                border-radius: 5px;
-                color: white;
-                font-weight: bold;
-                z-index: 1000;
-                opacity: 0;
-                transform: translateY(-20px);
-                transition: all 0.3s ease;
-                ${type === 'success' ? 'background: #28a745;' : 
-                  type === 'error' ? 'background: #dc3545;' : 
-                  'background: #17a2b8;'}
-            `;
-            
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.style.opacity = '1';
-                notification.style.transform = 'translateY(0)';
-            }, 100);
-            
-            setTimeout(() => {
-                notification.style.opacity = '0';
-                notification.style.transform = 'translateY(-20px)';
-                setTimeout(() => {
-                    document.body.removeChild(notification);
-                }, 300);
-            }, 3000);
-        }
-
-        // Enhanced error handling
-        window.addEventListener('error', function(e) {
-            console.error('Application error:', e);
-            showNotification('An error occurred. Please try again.', 'error');
-        });
-        
-        // Service worker registration for offline support
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function() {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(function(registration) {
-                        console.log('ServiceWorker registration successful');
-                    })
-                    .catch(function(err) {
-                        console.log('ServiceWorker registration failed');
-                    });
+    refreshExpenseTable() {
+        const expenseTable = document.getElementById('expenseTable');
+        if (expenseTable) {
+            expenseTable.innerHTML = '';
+            this.expenseRecords.forEach(expense => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${expense.date}</td>
+                    <td>${expense.category}</td>
+                    <td>${expense.description}</td>
+                    <td>${this.config.currencySymbol}${expense.amount.toFixed(2)}</td>
+                    <td>${expense.paymentMode}</td>
+                    <td>${expense.remarks || 'N/A'}</td>
+                    <td>
+                        <button class="btn btn-primary" onclick="app.showExpenseModal(${expense.id})">Edit</button>
+                        <button class="btn btn-danger" onclick="app.deleteExpense(${expense.id})">Delete</button>
+                    </td>
+                `;
+                expenseTable.appendChild(row);
             });
         }
-        // Disconnect Google Sheets
-        function disconnectGoogleSheets() {
-    if (confirm('Are you sure you want to disconnect from Google Sheets?')) {
-        localStorage.removeItem('rn_studio_sheets_url');
-        sheetsUrl = '';
-        document.getElementById('googleSheetUrl').value = '';
-        updateConnectionStatus(false);
-        showNotification('Disconnected from Google Sheets', 'info');
     }
-}
-
-// ===== ENHANCED PHOTOGRAPHY BUSINESS MANAGER =====
-// Add these functions to your existing JavaScript file
-
-// ===== SALARY MANAGEMENT FUNCTIONS =====
-
-// Enhanced Photographer Salary Management
-function initializeSalaryManagement() {
-    // Initialize salary data structure
-    if (!localStorage.getItem('salaryData')) {
-        localStorage.setItem('salaryData', JSON.stringify({}));
-    }
-    
-    // Initialize payment history
-    if (!localStorage.getItem('paymentHistory')) {
-        localStorage.setItem('paymentHistory', JSON.stringify([]));
-    }
-    
-    renderSalaryDashboard();
-}
-
-// Add Photographer Attendance with Salary Calculation
-function addPhotographerAttendance(photographerId, date, status, dailyRate, notes = '') {
-    let attendanceData = JSON.parse(localStorage.getItem('attendanceData') || '[]');
-    let salaryData = JSON.parse(localStorage.getItem('salaryData') || '{}');
-    
-    // Create attendance record
-    const attendanceRecord = {
-        id: Date.now().toString(),
-        photographerId: photographerId,
-        date: date,
-        status: status, // 'present', 'absent', 'half-day'
-        dailyRate: parseFloat(dailyRate),
-        earnings: status === 'present' ? parseFloat(dailyRate) : (status === 'half-day' ? parseFloat(dailyRate) * 0.5 : 0),
-        notes: notes,
-        timestamp: new Date().toISOString()
-    };
-    
-    attendanceData.push(attendanceRecord);
-    localStorage.setItem('attendanceData', JSON.stringify(attendanceData));
-    
-    // Update salary data
-    if (!salaryData[photographerId]) {
-        salaryData[photographerId] = {
-            totalEarned: 0,
-            totalPaid: 0,
-            daysWorked: 0,
-            lastPaymentDate: null
-        };
-    }
-    
-    salaryData[photographerId].totalEarned += attendanceRecord.earnings;
-    if (status === 'present') salaryData[photographerId].daysWorked += 1;
-    if (status === 'half-day') salaryData[photographerId].daysWorked += 0.5;
-    
-    localStorage.setItem('salaryData', JSON.stringify(salaryData));
-    
-    // Refresh displays
-    renderAttendanceTable();
-    renderSalaryDashboard();
-    
-    return attendanceRecord;
-}
-
-// Process Salary Payment
-function processSalaryPayment(photographerId, amount, paymentDate, paymentMode = 'Cash', remarks = '') {
-    let salaryData = JSON.parse(localStorage.getItem('salaryData') || '{}');
-    let paymentHistory = JSON.parse(localStorage.getItem('paymentHistory') || '[]');
-    
-    if (!salaryData[photographerId]) {
-        alert('No salary data found for this photographer');
-        return;
-    }
-    
-    const paymentRecord = {
-        id: Date.now().toString(),
-        photographerId: photographerId,
-        amount: parseFloat(amount),
-        paymentDate: paymentDate,
-        paymentMode: paymentMode,
-        remarks: remarks,
-        timestamp: new Date().toISOString()
-    };
-    
-    // Update salary data
-    salaryData[photographerId].totalPaid += parseFloat(amount);
-    salaryData[photographerId].lastPaymentDate = paymentDate;
-    
-    // Add to payment history
-    paymentHistory.push(paymentRecord);
-    
-    localStorage.setItem('salaryData', JSON.stringify(salaryData));
-    localStorage.setItem('paymentHistory', JSON.stringify(paymentHistory));
-    
-    // Refresh displays
-    renderSalaryDashboard();
-    renderPaymentHistory();
-    
-    return paymentRecord;
-}
-
-// Enhanced Expense Tracker
-function addExpense(date, category, description, amount, paymentMode, remarks = '') {
-    let expenseData = JSON.parse(localStorage.getItem('expenseData') || '[]');
-    
-    const expenseRecord = {
-        id: Date.now().toString(),
-        date: date,
-        category: category,
-        description: description,
-        amount: parseFloat(amount),
-        paymentMode: paymentMode,
-        remarks: remarks,
-        timestamp: new Date().toISOString()
-    };
-    
-    expenseData.push(expenseRecord);
-    localStorage.setItem('expenseData', JSON.stringify(expenseData));
-    
-    // Refresh displays
-    renderExpenseTable();
-    renderSummaryDashboard();
-    
-    return expenseRecord;
-}
-
-// ===== RENDERING FUNCTIONS =====
-
-// Render Enhanced Salary Dashboard
-function renderSalaryDashboard() {
-    const salaryData = JSON.parse(localStorage.getItem('salaryData') || '{}');
-    const photographers = JSON.parse(localStorage.getItem('photographers') || '[]');
-    const salaryTableBody = document.getElementById('salaryTableBody');
-    
-    if (!salaryTableBody) return;
-    
-    salaryTableBody.innerHTML = '';
-    
-    if (Object.keys(salaryData).length === 0) {
-        salaryTableBody.innerHTML = '<tr><td colspan="6">No salary data found</td></tr>';
-        return;
-    }
-    
-    Object.keys(salaryData).forEach(photographerId => {
-        const photographer = photographers.find(p => p.id === photographerId);
-        const salary = salaryData[photographerId];
-        const outstanding = salary.totalEarned - salary.totalPaid;
-        
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${photographer ? photographer.name : 'Unknown'}</td>
-            <td>${salary.daysWorked}</td>
-            <td>₹${salary.totalEarned.toFixed(2)}</td>
-            <td>₹${salary.totalPaid.toFixed(2)}</td>
-            <td class="${outstanding > 0 ? 'text-danger' : 'text-success'}">₹${outstanding.toFixed(2)}</td>
-            <td>${salary.lastPaymentDate || 'Never'}</td>
-        `;
-        salaryTableBody.appendChild(row);
-    });
-}
-
-// Render Enhanced Attendance Table
-function renderAttendanceTable() {
-    const attendanceData = JSON.parse(localStorage.getItem('attendanceData') || '[]');
-    const photographers = JSON.parse(localStorage.getItem('photographers') || '[]');
-    const attendanceTableBody = document.getElementById('attendanceTableBody');
-    
-    if (!attendanceTableBody) return;
-    
-    attendanceTableBody.innerHTML = '';
-    
-    if (attendanceData.length === 0) {
-        attendanceTableBody.innerHTML = '<tr><td colspan="7">No attendance records found</td></tr>';
-        return;
-    }
-    
-    attendanceData.sort((a, b) => new Date(b.date) - new Date(a.date));
-    
-    attendanceData.forEach(record => {
-        const photographer = photographers.find(p => p.id === record.photographerId);
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${photographer ? photographer.name : 'Unknown'}</td>
-            <td>${record.date}</td>
-            <td><span class="badge ${record.status === 'present' ? 'bg-success' : record.status === 'half-day' ? 'bg-warning' : 'bg-danger'}">${record.status}</span></td>
-            <td>₹${record.dailyRate.toFixed(2)}</td>
-            <td>₹${record.earnings.toFixed(2)}</td>
-            <td>${record.notes}</td>
-            <td>
-                <button class="btn btn-sm btn-danger" onclick="deleteAttendance('${record.id}')">Delete</button>
-            </td>
-        `;
-        attendanceTableBody.appendChild(row);
-    });
-}
-
-// Render Enhanced Expense Table
-function renderExpenseTable() {
-    const expenseData = JSON.parse(localStorage.getItem('expenseData') || '[]');
-    const expenseTableBody = document.getElementById('expenseTableBody');
-    
-    if (!expenseTableBody) return;
-    
-    expenseTableBody.innerHTML = '';
-    
-    if (expenseData.length === 0) {
-        expenseTableBody.innerHTML = '<tr><td colspan="7">No expense records found</td></tr>';
-        return;
-    }
-    
-    expenseData.sort((a, b) => new Date(b.date) - new Date(a.date));
-    
-    expenseData.forEach(expense => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${expense.date}</td>
-            <td><span class="badge bg-secondary">${expense.category}</span></td>
-            <td>${expense.description}</td>
-            <td>₹${expense.amount.toFixed(2)}</td>
-            <td>${expense.paymentMode}</td>
-            <td>${expense.remarks}</td>
-            <td>
-                <button class="btn btn-sm btn-danger" onclick="deleteExpense('${expense.id}')">Delete</button>
-            </td>
-        `;
-        expenseTableBody.appendChild(row);
-    });
-}
-
-// Render Summary Dashboard with Charts
-function renderSummaryDashboard() {
-    const salaryData = JSON.parse(localStorage.getItem('salaryData') || '{}');
-    const expenseData = JSON.parse(localStorage.getItem('expenseData') || '[]');
-    const eventData = JSON.parse(localStorage.getItem('eventData') || '[]');
-    
-    // Calculate totals
-    let totalSalaryEarned = 0;
-    let totalSalaryPaid = 0;
-    let totalSalaryDue = 0;
-    
-    Object.values(salaryData).forEach(salary => {
-        totalSalaryEarned += salary.totalEarned;
-        totalSalaryPaid += salary.totalPaid;
-        totalSalaryDue += (salary.totalEarned - salary.totalPaid);
-    });
-    
-    const totalExpenses = expenseData.reduce((sum, expense) => sum + expense.amount, 0);
-    const totalRevenue = eventData.reduce((sum, event) => sum + (event.prize || 0), 0);
-    
-    // Update summary cards
-    updateSummaryCard('totalSalaryEarned', totalSalaryEarned);
-    updateSummaryCard('totalSalaryPaid', totalSalaryPaid);
-    updateSummaryCard('totalSalaryDue', totalSalaryDue);
-    updateSummaryCard('totalExpenses', totalExpenses);
-    updateSummaryCard('totalRevenue', totalRevenue);
-    updateSummaryCard('netProfit', totalRevenue - totalExpenses - totalSalaryPaid);
-    
-    // Render expense category chart
-    renderExpenseCategoryChart();
-    renderMonthlyTrendsChart();
-}
-
-// Update Summary Card
-function updateSummaryCard(cardId, value) {
-    const cardElement = document.getElementById(cardId);
-    if (cardElement) {
-        cardElement.textContent = `₹${value.toFixed(2)}`;
-        if (cardId === 'netProfit') {
-            cardElement.className = value >= 0 ? 'text-success' : 'text-danger';
+    refreshSalaryTable() {
+        const salaryTable = document.getElementById('salaryTable');
+        if (salaryTable) {
+            salaryTable.innerHTML = '';
+            Object.keys(this.salaryData).forEach(photographerId => {
+                const data = this.salaryData[photographerId];
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${data.photographerName || 'Unknown'}</td>
+                    <td>${data.totalEarned.toFixed(2)}</td>
+                    <td>${data.totalPaid.toFixed(2)}</td>
+                    <td>${data.daysWorked}</td>
+                    <td>${data.lastPaymentDate || 'N/A'}</td>
+                `;
+                salaryTable.appendChild(row);
+            });
         }
     }
-}
-
-// Render Expense Category Chart
-function renderExpenseCategoryChart() {
-    const expenseData = JSON.parse(localStorage.getItem('expenseData') || '[]');
-    const categoryTotals = {};
-    
-    expenseData.forEach(expense => {
-        categoryTotals[expense.category] = (categoryTotals[expense.category] || 0) + expense.amount;
-    });
-    
-    const chartContainer = document.getElementById('expenseCategoryChart');
-    if (!chartContainer) return;
-    
-    chartContainer.innerHTML = '';
-    
-    if (Object.keys(categoryTotals).length === 0) {
-        chartContainer.innerHTML = '<p>No expense data available</p>';
-        return;
-    }
-    
-    const total = Object.values(categoryTotals).reduce((sum, val) => sum + val, 0);
-    
-    Object.entries(categoryTotals).forEach(([category, amount]) => {
-        const percentage = (amount / total) * 100;
-        const barContainer = document.createElement('div');
-        barContainer.className = 'mb-3';
-        barContainer.innerHTML = `
-            <div class="d-flex justify-content-between">
-                <span>${category}</span>
-                <span>₹${amount.toFixed(2)} (${percentage.toFixed(1)}%)</span>
-            </div>
-            <div class="progress">
-                <div class="progress-bar" style="width: ${percentage}%"></div>
-            </div>
-        `;
-        chartContainer.appendChild(barContainer);
-    });
-}
-
-// Render Monthly Trends Chart
-function renderMonthlyTrendsChart() {
-    const expenseData = JSON.parse(localStorage.getItem('expenseData') || '[]');
-    const eventData = JSON.parse(localStorage.getItem('eventData') || '[]');
-    const monthlyData = {};
-    
-    // Process expense data
-    expenseData.forEach(expense => {
-        const month = expense.date.substring(0, 7); // YYYY-MM
-        if (!monthlyData[month]) {
-            monthlyData[month] = { expenses: 0, revenue: 0 };
-        }
-        monthlyData[month].expenses += expense.amount;
-    });
-    
-    // Process revenue data
-    eventData.forEach(event => {
-        const month = event.date.substring(0, 7); // YYYY-MM
-        if (!monthlyData[month]) {
-            monthlyData[month] = { expenses: 0, revenue: 0 };
-        }
-        monthlyData[month].revenue += (event.prize || 0);
-    });
-    
-    const trendsContainer = document.getElementById('monthlyTrendsChart');
-    if (!trendsContainer) return;
-    
-    trendsContainer.innerHTML = '';
-    
-    if (Object.keys(monthlyData).length === 0) {
-        trendsContainer.innerHTML = '<p>No monthly data available</p>';
-        return;
-    }
-    
-    const sortedMonths = Object.keys(monthlyData).sort();
-    
-    sortedMonths.forEach(month => {
-        const data = monthlyData[month];
-        const profit = data.revenue - data.expenses;
-        const monthContainer = document.createElement('div');
-        monthContainer.className = 'mb-3';
-        monthContainer.innerHTML = `
-            <h6>${month}</h6>
-            <div class="row">
-                <div class="col-4">
-                    <small class="text-muted">Revenue</small>
-                    <div class="fw-bold text-success">₹${data.revenue.toFixed(2)}</div>
-                </div>
-                <div class="col-4">
-                    <small class="text-muted">Expenses</small>
-                    <div class="fw-bold text-danger">₹${data.expenses.toFixed(2)}</div>
-                </div>
-                <div class="col-4">
-                    <small class="text-muted">Profit</small>
-                    <div class="fw-bold ${profit >= 0 ? 'text-success' : 'text-danger'}">₹${profit.toFixed(2)}</div>
-                </div>
-            </div>
-            <hr>
-        `;
-        trendsContainer.appendChild(monthContainer);
-    });
-}
-
-// ===== FORM HANDLING FUNCTIONS =====
-
-// Handle Attendance Form Submission
-function handleAttendanceForm(event) {
-    event.preventDefault();
-    
-    const formData = new FormData(event.target);
-    const photographerId = formData.get('photographerId');
-    const date = formData.get('date');
-    const status = formData.get('status');
-    const dailyRate = formData.get('dailyRate');
-    const notes = formData.get('notes');
-    
-    addPhotographerAttendance(photographerId, date, status, dailyRate, notes);
-    event.target.reset();
-    
-    // Show success message
-    showNotification('Attendance recorded successfully!', 'success');
-}
-
-// Handle Salary Payment Form Submission
-function handleSalaryPaymentForm(event) {
-    event.preventDefault();
-    
-    const formData = new FormData(event.target);
-    const photographerId = formData.get('photographerId');
-    const amount = formData.get('amount');
-    const paymentDate = formData.get('paymentDate');
-    const paymentMode = formData.get('paymentMode');
-    const remarks = formData.get('remarks');
-    
-    processSalaryPayment(photographerId, amount, paymentDate, paymentMode, remarks);
-    event.target.reset();
-    
-    // Show success message
-    showNotification('Payment recorded successfully!', 'success');
-}
-
-// Handle Expense Form Submission
-function handleExpenseForm(event) {
-    event.preventDefault();
-    
-    const formData = new FormData(event.target);
-    const date = formData.get('date');
-    const category = formData.get('category');
-    const description = formData.get('description');
-    const amount = formData.get('amount');
-    const paymentMode = formData.get('paymentMode');
-    const remarks = formData.get('remarks');
-    
-    addExpense(date, category, description, amount, paymentMode, remarks);
-    event.target.reset();
-    
-    // Show success message
-    showNotification('Expense recorded successfully!', 'success');
-}
-
-// ===== UTILITY FUNCTIONS =====
-
-// Show Notification
-function showNotification(message, type = 'info') {
-    // Create notification element
-    const notification = document.createElement('div');
-    notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
-    notification.style.cssText = 'top: 20px; right: 20px; z-index: 1050; min-width: 300px;';
-    notification.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    // Auto remove after 3 seconds
-    setTimeout(() => {
-        if (notification.parentElement) {
-            notification.remove();
-        }
-    }, 3000);
-}
-
-// Delete Attendance Record
-function deleteAttendance(attendanceId) {
-    if (!confirm('Are you sure you want to delete this attendance record?')) return;
-    
-    let attendanceData = JSON.parse(localStorage.getItem('attendanceData') || '[]');
-    const recordIndex = attendanceData.findIndex(record => record.id === attendanceId);
-    
-    if (recordIndex > -1) {
-        const record = attendanceData[recordIndex];
-        attendanceData.splice(recordIndex, 1);
-        localStorage.setItem('attendanceData', JSON.stringify(attendanceData));
-        
-        // Update salary data
-        let salaryData = JSON.parse(localStorage.getItem('salaryData') || '{}');
-        if (salaryData[record.photographerId]) {
-            salaryData[record.photographerId].totalEarned -= record.earnings;
-            if (record.status === 'present') salaryData[record.photographerId].daysWorked -= 1;
-            if (record.status === 'half-day') salaryData[record.photographerId].daysWorked -= 0.5;
-            localStorage.setItem('salaryData', JSON.stringify(salaryData));
-        }
-        
-        renderAttendanceTable();
-        renderSalaryDashboard();
-        showNotification('Attendance record deleted successfully!', 'success');
+    populatePhotographerDropdowns() {
+        const photographerSelects = document.querySelectorAll('.photographer-select');
+        photographerSelects.forEach(select => {
+            select.innerHTML = '';
+            this.photographers.forEach(photographer => {
+                const option = document.createElement('option');
+                option.value = photographer.id;
+                option.textContent = photographer.name;
+                select.appendChild(option);
+            });
+        });
     }
 }
-
-// Delete Expense Record
-function deleteExpense(expenseId) {
-    if (!confirm('Are you sure you want to delete this expense record?')) return;
-    
-    let expenseData = JSON.parse(localStorage.getItem('expenseData') || '[]');
-    const recordIndex = expenseData.findIndex(expense => expense.id === expenseId);
-    
-    if (recordIndex > -1) {
-        expenseData.splice(recordIndex, 1);
-        localStorage.setItem('expenseData', JSON.stringify(expenseData));
-        
-        renderExpenseTable();
-        renderSummaryDashboard();
-        showNotification('Expense record deleted successfully!', 'success');
-    }
-}
-
-// Export Data Functions
-function exportSalaryData() {
-    const salaryData = JSON.parse(localStorage.getItem('salaryData') || '{}');
-    const attendanceData = JSON.parse(localStorage.getItem('attendanceData') || '[]');
-    const paymentHistory = JSON.parse(localStorage.getItem('paymentHistory') || '[]');
-    const photographers = JSON.parse(localStorage.getItem('photographers') || '[]');
-    
-    const exportData = {
-        salaryData,
-        attendanceData,
-        paymentHistory,
-        photographers,
-        exportDate: new Date().toISOString()
-    };
-    
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], {
-        type: 'application/json'
-    });
-    
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `salary-data-${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-}
-
-function exportExpenseData() {
-    const expenseData = JSON.parse(localStorage.getItem('expenseData') || '[]');
-    
-    const exportData = {
-        expenseData,
-        exportDate: new Date().toISOString()
-    };
-    
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], {
-        type: 'application/json'
-    });
-    
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `expense-data-${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-}
-
-// ===== INITIALIZATION =====
-
-// Initialize the enhanced features when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    initializeSalaryManagement();
-    
-    // Set up form listeners
-    const attendanceForm = document.getElementById('attendanceForm');
-    if (attendanceForm) {
-        attendanceForm.addEventListener('submit', handleAttendanceForm);
-    }
-    
-    const salaryPaymentForm = document.getElementById('salaryPaymentForm');
-    if (salaryPaymentForm) {
-        salaryPaymentForm.addEventListener('submit', handleSalaryPaymentForm);
-    }
-    
-    const expenseForm = document.getElementById('expenseForm');
-    if (expenseForm) {
-        expenseForm.addEventListener('submit', handleExpenseForm);
-    }
-    
-    // Auto-refresh dashboard every 30 seconds
-    setInterval(() => {
-        renderSummaryDashboard();
-    }, 30000);
-});
-
-// ===== GOOGLE APPS SCRIPT INTEGRATION =====
-
-// Enhanced Google Sheets sync functions
-function syncSalaryDataToSheets() {
-    const salaryData = JSON.parse(localStorage.getItem('salaryData') || '{}');
-    const attendanceData = JSON.parse(localStorage.getItem('attendanceData') || '[]');
-    const paymentHistory = JSON.parse(localStorage.getItem('paymentHistory') || '[]');
-    
-    if (typeof google !== 'undefined' && google.script) {
-        google.script.run
-            .withSuccessHandler(function(response) {
-                showNotification('Salary data synced to Google Sheets successfully!', 'success');
-            })
-            .withFailureHandler(function(error) {
-                showNotification('Error syncing salary data: ' + error.message, 'danger');
-            })
-            .updateSalarySheets(salaryData, attendanceData, paymentHistory);
-    }
-}
-
-function syncExpenseDataToSheets() {
-    const expenseData = JSON.parse(localStorage.getItem('expenseData') || '[]');
-    
-    if (typeof google !== 'undefined' && google.script) {
-        google.script.run
-            .withSuccessHandler(function(response) {
-                showNotification('Expense data synced to Google Sheets successfully!', 'success');
-            })
-            .withFailureHandler(function(error) {
-                showNotification('Error syncing expense data: ' + error.message, 'danger');
-            })
-            .updateExpenseSheets(expenseData);
-    }
-}
-
-// Auto-sync every 5 minutes if Google Sheets is connected
-setInterval(() => {
-    if (typeof google !== 'undefined' && google.script) {
-        syncSalaryDataToSheets();
-        syncExpenseDataToSheets();
-    }
-}, 300000); // 5 minutes
 </script>
 
     </div>
