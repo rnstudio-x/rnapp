@@ -319,6 +319,9 @@
             <button class="nav-tab" onclick="showTab('add-event')">Add Event</button>
             <button class="nav-tab" onclick="showTab('events')">View Events</button>
             <button class="nav-tab" onclick="showTab('photographers')">Photographers</button>
+            <button class="nav-tab" onclick="showTab('salary-management')">Salary Management</button>
+            <button class="nav-tab" onclick="showTab('expense-tracker')">Expense Tracker</button>
+            <button class="nav-tab" onclick="showTab('salary-dashboard')">Salary Dashboard</button>
             <button class="nav-tab" onclick="showTab('analytics')">Analytics</button>
             <button class="nav-tab" onclick="showTab('settings')">Settings</button>
         </div>
@@ -588,8 +591,253 @@
                 </div>
             </div>
         </div>
+
+        <div id="salary-management" class="tab-content">
+    <div class="form-section">
+        <h3>Photographer Attendance & Salary</h3>
+        <form id="attendanceForm">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="attendancePhotographer">Photographer</label>
+                    <select id="attendancePhotographer" name="attendancePhotographer" required>
+                        <option value="">Select Photographer</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="attendanceDate">Date</label>
+                    <input type="date" id="attendanceDate" name="attendanceDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="attendanceStatus">Status</label>
+                    <select id="attendanceStatus" name="attendanceStatus" required>
+                        <option value="">Select Status</option>
+                        <option value="Present">Present</option>
+                        <option value="Absent">Absent</option>
+                        <option value="Half-Day">Half-Day</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="attendanceNotes">Notes</label>
+                    <input type="text" id="attendanceNotes" name="attendanceNotes" placeholder="Optional notes">
+                </div>
+            </div>
+            <div class="action-buttons">
+                <button type="submit" class="btn btn-primary">Mark Attendance</button>
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('attendanceForm').reset()">Clear</button>
+            </div>
+        </form>
     </div>
 
+    <div class="form-section">
+        <h3>Salary Payment</h3>
+        <form id="salaryPaymentForm">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="paymentPhotographer">Photographer</label>
+                    <select id="paymentPhotographer" name="paymentPhotographer" required>
+                        <option value="">Select Photographer</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="paymentAmount">Payment Amount (₹)</label>
+                    <input type="number" id="paymentAmount" name="paymentAmount" required>
+                </div>
+                <div class="form-group">
+                    <label for="paymentDate">Payment Date</label>
+                    <input type="date" id="paymentDate" name="paymentDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="paymentMode">Payment Mode</label>
+                    <select id="paymentMode" name="paymentMode" required>
+                        <option value="">Select Mode</option>
+                        <option value="Cash">Cash</option>
+                        <option value="UPI">UPI</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                        <option value="Cheque">Cheque</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="paymentRemarks">Remarks</label>
+                    <input type="text" id="paymentRemarks" name="paymentRemarks" placeholder="Optional remarks">
+                </div>
+            </div>
+            <div class="action-buttons">
+                <button type="submit" class="btn btn-primary">Record Payment</button>
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('salaryPaymentForm').reset()">Clear</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="form-section">
+        <h3>Attendance Records</h3>
+        <div style="margin-bottom: 20px;">
+            <select id="attendanceFilterPhotographer" style="padding: 10px; margin-right: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                <option value="">All Photographers</option>
+            </select>
+            <input type="month" id="attendanceFilterMonth" style="padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+        </div>
+        <table class="data-table" id="attendanceTable">
+            <thead>
+                <tr>
+                    <th>Photographer</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Daily Rate</th>
+                    <th>Earnings</th>
+                    <th>Notes</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="attendanceTableBody">
+                <tr>
+                    <td colspan="7" style="text-align: center; color: #666;">No attendance records found</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Expense Tracker Tab -->
+<div id="expense-tracker" class="tab-content">
+    <div class="form-section">
+        <h3>Add Expense</h3>
+        <form id="expenseForm">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="expenseDate">Date</label>
+                    <input type="date" id="expenseDate" name="expenseDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="expenseCategory">Category</label>
+                    <select id="expenseCategory" name="expenseCategory" required>
+                        <option value="">Select Category</option>
+                        <option value="Travel">Travel</option>
+                        <option value="Equipment">Equipment</option>
+                        <option value="Props">Props</option>
+                        <option value="Food">Food</option>
+                        <option value="Editing Tools">Editing Tools</option>
+                        <option value="Marketing">Marketing</option>
+                        <option value="Miscellaneous">Miscellaneous</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="expenseDescription">Description</label>
+                    <input type="text" id="expenseDescription" name="expenseDescription" required placeholder="Brief description">
+                </div>
+                <div class="form-group">
+                    <label for="expenseAmount">Amount (₹)</label>
+                    <input type="number" id="expenseAmount" name="expenseAmount" required>
+                </div>
+                <div class="form-group">
+                    <label for="expensePaymentMode">Payment Mode</label>
+                    <select id="expensePaymentMode" name="expensePaymentMode" required>
+                        <option value="">Select Mode</option>
+                        <option value="Cash">Cash</option>
+                        <option value="UPI">UPI</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                        <option value="Credit Card">Credit Card</option>
+                        <option value="Debit Card">Debit Card</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="expenseRemarks">Remarks</label>
+                    <input type="text" id="expenseRemarks" name="expenseRemarks" placeholder="Optional remarks">
+                </div>
+            </div>
+            <div class="action-buttons">
+                <button type="submit" class="btn btn-primary">Add Expense</button>
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('expenseForm').reset()">Clear</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="form-section">
+        <h3>Expense Records</h3>
+        <div style="margin-bottom: 20px;">
+            <select id="expenseFilterCategory" style="padding: 10px; margin-right: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                <option value="">All Categories</option>
+                <option value="Travel">Travel</option>
+                <option value="Equipment">Equipment</option>
+                <option value="Props">Props</option>
+                <option value="Food">Food</option>
+                <option value="Editing Tools">Editing Tools</option>
+                <option value="Marketing">Marketing</option>
+                <option value="Miscellaneous">Miscellaneous</option>
+            </select>
+            <input type="month" id="expenseFilterMonth" style="padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+        </div>
+        <table class="data-table" id="expenseTable">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Amount</th>
+                    <th>Payment Mode</th>
+                    <th>Remarks</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="expenseTableBody">
+                <tr>
+                    <td colspan="7" style="text-align: center; color: #666;">No expense records found</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Salary Dashboard Tab -->
+<div id="salary-dashboard" class="tab-content">
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h4>Total Salary Earned</h4>
+            <div class="value" id="totalSalaryEarned">₹0</div>
+        </div>
+        <div class="stat-card">
+            <h4>Total Salary Paid</h4>
+            <div class="value" id="totalSalaryPaid">₹0</div>
+        </div>
+        <div class="stat-card">
+            <h4>Outstanding Salary</h4>
+            <div class="value" id="outstandingSalary">₹0</div>
+        </div>
+        <div class="stat-card">
+            <h4>Total Expenses</h4>
+            <div class="value" id="totalExpensesAmount">₹0</div>
+        </div>
+    </div>
+
+    <div class="form-section">
+        <h3>Photographer Salary Summary</h3>
+        <table class="data-table" id="salaryDashboardTable">
+            <thead>
+                <tr>
+                    <th>Photographer</th>
+                    <th>Days Worked</th>
+                    <th>Total Earned</th>
+                    <th>Total Paid</th>
+                    <th>Outstanding</th>
+                    <th>Last Payment</th>
+                </tr>
+            </thead>
+            <tbody id="salaryDashboardTableBody">
+                <tr>
+                    <td colspan="6" style="text-align: center; color: #666;">No salary data found</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="form-section">
+        <h3>Monthly Expense Breakdown</h3>
+        <div class="expense-breakdown" id="expenseBreakdown">
+            <p style="text-align: center; color: #666;">No expense data found</p>
+            </div>
+         </div>
+       </div>
+
+    </div>
     <script>
         // Data storage
         let events = JSON.parse(localStorage.getItem('rn_studio_events')) || [];
