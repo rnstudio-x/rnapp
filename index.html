@@ -1874,7 +1874,7 @@ function syncToGoogleSheets(manual = false, initialUpload = false) {
     const expensesInput = document.createElement('input');
     expensesInput.type = 'hidden';
     expensesInput.name = 'expenses';
-    expensesInput.value = JSON.stringify(expenses);
+    expensesInput.value = JSON.stringify(expenseRecords);
     form.appendChild(expensesInput);
     
     document.body.appendChild(form);
