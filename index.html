@@ -4,389 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RN Studio - Business Manager</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .header h1 {
-            font-size: 2.5em;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-
-        .header p {
-            font-size: 1.2em;
-            color: #666;
-            -webkit-text-fill-color: #666;
-        }
-
-        .nav-tabs {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 30px;
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 5px;
-        }
-
-        .nav-tab {
-            padding: 12px 25px;
-            margin: 0 5px;
-            background: none;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            color: #666;
-        }
-
-        .nav-tab.active {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
-        }
-
-        .nav-tab:hover:not(.active) {
-            background: #e9ecef;
-            transform: translateY(-1px);
-        }
-
-        .tab-content {
-            display: none;
-            animation: fadeIn 0.5s ease-in-out;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .form-section {
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            margin-bottom: 25px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            border: 1px solid #e9ecef;
-        }
-
-        .form-section h3 {
-            color: #333;
-            margin-bottom: 20px;
-            font-size: 1.3em;
-            border-bottom: 2px solid #667eea;
-            padding-bottom: 10px;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .form-group label {
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #444;
-        }
-
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            padding: 12px;
-            border: 2px solid #e9ecef;
-            border-radius: 10px;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            background: #f8f9fa;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #667eea;
-            background: white;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .btn {
-            padding: 15px 30px;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
-        }
-
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background: #5a6268;
-            transform: translateY(-2px);
-        }
-
-        .btn-danger {
-            background: #dc3545;
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: #c82333;
-            transform: translateY(-2px);
-        }
-
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            background: white;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .data-table th,
-        .data-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #e9ecef;
-        }
-
-        .data-table th {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-            font-weight: 600;
-        }
-
-        .data-table tr:hover {
-            background: #f8f9fa;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            border-left: 5px solid #667eea;
-            transition: transform 0.3s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .stat-card h4 {
-            color: #666;
-            font-size: 0.9em;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .stat-card .value {
-            font-size: 2em;
-            font-weight: 700;
-            color: #333;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 20px;
-        }
-
-        .google-sheets-section {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 20px;
-            border: 2px dashed #667eea;
-        }
-
-        .google-sheets-section h4 {
-            color: #667eea;
-            margin-bottom: 15px;
-        }
-
-        .status-indicator {
-            display: inline-block;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.8em;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .status-connected {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .status-disconnected {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        @media (max-width: 768px) {
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .nav-tabs {
-                flex-direction: column;
-            }
-            
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-        .expense-breakdown-grid {
-    display: grid;
-    gap: 15px;
-    margin-top: 20px;
-}
-
-.expense-category {
-    background: #f8f9fa;
-    padding: 15px;
-    border-radius: 8px;
-    border: 1px solid #dee2e6;
-}
-
-.category-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-.category-name {
-    font-weight: bold;
-    color: #333;
-}
-
-.category-amount {
-    color: #007bff;
-    font-weight: bold;
-}
-
-.category-bar {
-    background: #e9ecef;
-    height: 10px;
-    border-radius: 5px;
-    overflow: hidden;
-    margin-bottom: 5px;
-}
-
-.category-progress {
-    background: linear-gradient(45deg, #007bff, #0056b3);
-    height: 100%;
-    border-radius: 5px;
-    transition: width 0.3s ease;
-}
-
-.category-percentage {
-    text-align: right;
-    font-size: 12px;
-    color: #6c757d;
-}
-
-.status-warning {
-    background: #ffc107;
-    color: #000;
-}
-
-.dashboard-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    margin-bottom: 30px;
-}
-
-.table-responsive {
-    overflow-x: auto;
-}
-
-.table-responsive table {
-    min-width: 100%;
-    white-space: nowrap;
-}
-
-@media (max-width: 768px) {
-    .dashboard-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .table-responsive {
-        font-size: 14px;
-    }
-}
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
@@ -672,7 +290,7 @@
                 </div>
             </div>
         </div>
-
+        
         <div id="salary-management" class="tab-content">
     <div class="form-section">
         <h3>Photographer Attendance & Salary</h3>
@@ -917,1210 +535,737 @@
             </div>
          </div>
        </div>
-       <!-- Salary Management Tab -->
-<div id="salary-management" class="tab-content">
-    <h2>Salary Management</h2>
-    
-    <!-- Attendance Section -->
-    <div class="card">
-        <h3>Mark Attendance</h3>
-        <form id="attendanceForm">
-            <div class="form-group">
-                <label>Photographer:</label>
-                <select id="attendancePhotographer" name="attendancePhotographer" required>
-                    <option value="">Select Photographer</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Date:</label>
-                <input type="date" id="attendanceDate" name="attendanceDate" required>
-            </div>
-            <div class="form-group">
-                <label>Status:</label>
-                <select name="attendanceStatus" required>
-                    <option value="">Select Status</option>
-                    <option value="Present">Present</option>
-                    <option value="Half-Day">Half-Day</option>
-                    <option value="Absent">Absent</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Notes:</label>
-                <textarea name="attendanceNotes" placeholder="Optional notes"></textarea>
-            </div>
-            <button type="submit" class="btn btn-primary">Mark Attendance</button>
-        </form>
+
     </div>
 
-    <!-- Salary Payment Section -->
-    <div class="card">
-        <h3>Record Salary Payment</h3>
-        <form id="salaryPaymentForm">
-            <div class="form-group">
-                <label>Photographer:</label>
-                <select id="paymentPhotographer" name="paymentPhotographer" required>
-                    <option value="">Select Photographer</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Amount (₹):</label>
-                <input type="number" name="paymentAmount" step="0.01" required>
-            </div>
-            <div class="form-group">
-                <label>Payment Date:</label>
-                <input type="date" id="paymentDate" name="paymentDate" required>
-            </div>
-            <div class="form-group">
-                <label>Payment Mode:</label>
-                <select name="paymentMode" required>
-                    <option value="">Select Mode</option>
-                    <option value="Cash">Cash</option>
-                    <option value="UPI">UPI</option>
-                    <option value="Bank Transfer">Bank Transfer</option>
-                    <option value="Cheque">Cheque</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Remarks:</label>
-                <textarea name="paymentRemarks" placeholder="Optional remarks"></textarea>
-            </div>
-            <button type="submit" class="btn btn-primary">Record Payment</button>
-        </form>
-    </div>
+    <script>
+        // Data storage
+        let events = JSON.parse(localStorage.getItem('rn_studio_events')) || [];
+        let photographers = JSON.parse(localStorage.getItem('rn_studio_photographers')) || [
+            {id: 1, name: 'Self', contact: '', email: '', rate: 0}
+        ];
+        let isConnectedToSheets = false;
+        let sheetsUrl = '';
 
-    <!-- Attendance Table -->
-    <div class="card">
-        <h3>Attendance Records</h3>
-        <div class="table-responsive">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Photographer</th>
-                        <th>Date</th>
-                        <th>Status</th>
-                        <th>Daily Rate</th>
-                        <th>Earnings</th>
-                        <th>Notes</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="attendanceTableBody">
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<!-- Expense Tracker Tab -->
-<div id="expense-tracker" class="tab-content">
-    <h2>Expense Tracker</h2>
-    
-    <div class="card">
-        <h3>Add Expense</h3>
-        <form id="expenseForm">
-            <div class="form-group">
-                <label>Date:</label>
-                <input type="date" id="expenseDate" name="expenseDate" required>
-            </div>
-            <div class="form-group">
-                <label>Category:</label>
-                <select name="expenseCategory" required>
-                    <option value="">Select Category</option>
-                    <option value="Travel">Travel</option>
-                    <option value="Equipment">Equipment</option>
-                    <option value="Props">Props</option>
-                    <option value="Food">Food</option>
-                    <option value="Editing Tools">Editing Tools</option>
-                    <option value="Marketing">Marketing</option>
-                    <option value="Maintenance">Maintenance</option>
-                    <option value="Other">Other</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Description:</label>
-                <input type="text" name="expenseDescription" placeholder="Brief description" required>
-            </div>
-            <div class="form-group">
-                <label>Amount (₹):</label>
-                <input type="number" name="expenseAmount" step="0.01" required>
-            </div>
-            <div class="form-group">
-                <label>Payment Mode:</label>
-                <select name="expensePaymentMode" required>
-                    <option value="">Select Mode</option>
-                    <option value="Cash">Cash</option>
-                    <option value="UPI">UPI</option>
-                    <option value="Bank Transfer">Bank Transfer</option>
-                    <option value="Credit Card">Credit Card</option>
-                    <option value="Debit Card">Debit Card</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Remarks:</label>
-                <textarea name="expenseRemarks" placeholder="Optional remarks"></textarea>
-            </div>
-            <button type="submit" class="btn btn-primary">Add Expense</button>
-        </form>
-    </div>
-
-    <div class="card">
-        <h3>Expense Records</h3>
-        <div class="table-responsive">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Category</th>
-                        <th>Description</th>
-                        <th>Amount</th>
-                        <th>Payment Mode</th>
-                        <th>Remarks</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="expenseTableBody">
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<!-- Salary Dashboard Tab -->
-<div id="salary-dashboard" class="tab-content">
-    <h2>Salary Dashboard</h2>
-    
-    <!-- Summary Cards -->
-    <div class="dashboard-grid">
-        <div class="card">
-            <h3>Total Salary Earned</h3>
-            <div class="metric" id="totalSalaryEarned">₹0</div>
-        </div>
-        <div class="card">
-            <h3>Total Salary Paid</h3>
-            <div class="metric" id="totalSalaryPaid">₹0</div>
-        </div>
-        <div class="card">
-            <h3>Outstanding Salary</h3>
-            <div class="metric" id="outstandingSalary">₹0</div>
-        </div>
-        <div class="card">
-            <h3>Total Expenses</h3>
-            <div class="metric" id="totalExpensesAmount">₹0</div>
-        </div>
-    </div>
-
-    <!-- Photographer Salary Summary -->
-    <div class="card">
-        <h3>Photographer Salary Summary</h3>
-        <div class="table-responsive">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Photographer</th>
-                        <th>Days Worked</th>
-                        <th>Total Earned</th>
-                        <th>Total Paid</th>
-                        <th>Outstanding</th>
-                        <th>Last Payment</th>
-                    </tr>
-                </thead>
-                <tbody id="salaryDashboardTableBody">
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Expense Breakdown -->
-    <div class="card">
-        <h3>Expense Breakdown</h3>
-        <div id="expenseBreakdown"></div>
-    </div>
-</div>
-<script>
-            // ===== ENHANCED PHOTOGRAPHY BUSINESS MANAGER - JAVASCRIPT =====
-// Professional Photography Business Management System
-// Compatible with Google Apps Script backend integration
-
-class PhotographyBusinessManager {
-    constructor() {
-        this.events = JSON.parse(localStorage.getItem('events') || '[]');
-        this.photographers = JSON.parse(localStorage.getItem('photographers') || '[]');
-        this.attendanceRecords = JSON.parse(localStorage.getItem('attendance') || '[]');
-        this.expenseRecords = JSON.parse(localStorage.getItem('expenses') || '[]');
-        this.paymentHistory = JSON.parse(localStorage.getItem('payments') || '[]');
-        this.salaryData = JSON.parse(localStorage.getItem('salaryData') || '{}');
-        
-        // Configuration
-        this.config = {
-            googleSheetUrl: localStorage.getItem('googleSheetUrl') || '',
-            autoSync: localStorage.getItem('autoSync') === 'true',
-            currency: 'INR',
-            currencySymbol: '₹',
-            reportEmail: localStorage.getItem('reportEmail') || '',
-            darkMode: localStorage.getItem('darkMode') === 'true',
-            notifications: localStorage.getItem('notifications') !== 'false'
-        };
-        
-        // Initialize default photographer if none exists
-        if (this.photographers.length === 0) {
-            this.addDefaultPhotographer();
-        }
-        
-        this.initializeEventHandlers();
-        this.loadDashboard();
-        this.setupPeriodicSync();
-    }
-
-    // ===== INITIALIZATION =====
-    initializeEventHandlers() {
-        // Event Management
-        document.getElementById('addEventBtn')?.addEventListener('click', () => this.showEventModal());
-        document.getElementById('saveEventBtn')?.addEventListener('click', () => this.saveEvent());
-        document.getElementById('saveEventUpcomingBtn')?.addEventListener('click', () => this.saveEventUpcoming());
-        
-        // Photographer Management
-        document.getElementById('addPhotographerBtn')?.addEventListener('click', () => this.showPhotographerModal());
-        document.getElementById('savePhotographerBtn')?.addEventListener('click', () => this.savePhotographer());
-        
-        // Attendance Management
-        document.getElementById('addAttendanceBtn')?.addEventListener('click', () => this.showAttendanceModal());
-        document.getElementById('saveAttendanceBtn')?.addEventListener('click', () => this.saveAttendance());
-        
-        // Expense Management
-        document.getElementById('addExpenseBtn')?.addEventListener('click', () => this.showExpenseModal());
-        document.getElementById('saveExpenseBtn')?.addEventListener('click', () => this.saveExpense());
-        
-        // Salary Management
-        document.getElementById('addPaymentBtn')?.addEventListener('click', () => this.showPaymentModal());
-        document.getElementById('savePaymentBtn')?.addEventListener('click', () => this.savePayment());
-        
-        // Settings and Sync
-        document.getElementById('syncBtn')?.addEventListener('click', () => this.syncWithGoogleSheets());
-        document.getElementById('settingsBtn')?.addEventListener('click', () => this.showSettingsModal());
-        document.getElementById('saveSettingsBtn')?.addEventListener('click', () => this.saveSettings());
-        
-        // Export functionality
-        document.getElementById('exportBtn')?.addEventListener('click', () => this.showExportModal());
-        document.getElementById('exportDataBtn')?.addEventListener('click', () => this.exportData());
-        
-        // Navigation
-        document.querySelectorAll('.nav-link').forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                const target = e.target.getAttribute('data-target');
-                this.showSection(target);
+        // Tab navigation
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
             });
-        });
-        
-        // Modal close handlers
-        document.querySelectorAll('.modal .close').forEach(closeBtn => {
-            closeBtn.addEventListener('click', (e) => {
-                e.target.closest('.modal').style.display = 'none';
+            
+            // Remove active class from all nav tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
             });
-        });
-        
-        // Click outside modal to close
-        window.addEventListener('click', (e) => {
-            if (e.target.classList.contains('modal')) {
-                e.target.style.display = 'none';
-            }
-        });
-        
-        // Auto-calculate profit in event form
-        document.getElementById('eventPrize')?.addEventListener('input', () => this.calculateEventProfit());
-        document.getElementById('eventExpenses')?.addEventListener('input', () => this.calculateEventProfit());
-        document.getElementById('eventSalary')?.addEventListener('input', () => this.calculateEventProfit());
-        
-        // Auto-calculate earnings in attendance form
-        document.getElementById('attendanceDailyRate')?.addEventListener('input', () => this.calculateAttendanceEarnings());
-        document.getElementById('attendanceStatus')?.addEventListener('change', () => this.calculateAttendanceEarnings());
-        
-        // Search functionality
-        document.getElementById('searchInput')?.addEventListener('input', (e) => this.searchRecords(e.target.value));
-        
-        // Theme toggle
-        document.getElementById('themeToggle')?.addEventListener('click', () => this.toggleTheme());
-    }
-
-    addDefaultPhotographer() {
-        const defaultPhotographer = {
-            id: 1,
-            name: 'Self',
-            contact: '',
-            email: '',
-            rate: 0,
-            createdAt: new Date().toISOString()
-        };
-        this.photographers.push(defaultPhotographer);
-        this.saveToLocalStorage();
-    }
-
-    // ===== EVENT MANAGEMENT =====
-    showEventModal(eventId = null) {
-        const modal = document.getElementById('eventModal');
-        const form = document.getElementById('eventForm');
-        const titleElement = document.getElementById('eventModalTitle');
-        
-        if (eventId) {
-            const event = this.events.find(e => e.id === eventId);
-            if (event) {
-                titleElement.textContent = 'Edit Event';
-                this.populateEventForm(event);
-            }
-        } else {
-            titleElement.textContent = 'Add New Event';
-            form.reset();
-            document.getElementById('eventId').value = '';
-        }
-        
-        this.populatePhotographerDropdown('eventPhotographer');
-        modal.style.display = 'block';
-    }
-
-    populateEventForm(event) {
-        document.getElementById('eventId').value = event.id;
-        document.getElementById('eventName').value = event.name;
-        document.getElementById('eventDate').value = event.date;
-        document.getElementById('eventType').value = event.type;
-        document.getElementById('eventPrize').value = event.prize;
-        document.getElementById('eventExpenses').value = event.expenses;
-        document.getElementById('eventPhotographer').value = event.photographer;
-        document.getElementById('eventSalary').value = event.salary;
-        document.getElementById('eventDuration').value = event.duration;
-        document.getElementById('eventNotes').value = event.notes || '';
-        this.calculateEventProfit();
-    }
-
-    saveEvent() {
-        const formData = new FormData(document.getElementById('eventForm'));
-        const eventData = {
-            id: formData.get('eventId') || Date.now(),
-            name: formData.get('eventName'),
-            date: formData.get('eventDate'),
-            type: formData.get('eventType'),
-            prize: parseFloat(formData.get('eventPrize')) || 0,
-            expenses: parseFloat(formData.get('eventExpenses')) || 0,
-            photographer: formData.get('eventPhotographer'),
-            salary: parseFloat(formData.get('eventSalary')) || 0,
-            duration: parseInt(formData.get('eventDuration')) || 1,
-            notes: formData.get('eventNotes') || '',
-            profit: 0,
-            status: 'completed',
-            createdAt: new Date().toISOString()
-        };
-        
-        eventData.profit = eventData.prize - eventData.expenses - eventData.salary;
-        
-        const existingIndex = this.events.findIndex(e => e.id === eventData.id);
-        if (existingIndex !== -1) {
-            this.events[existingIndex] = eventData;
-        } else {
-            this.events.push(eventData);
-        }
-        
-        this.saveToLocalStorage();
-        this.refreshEventTables();
-        this.updateSalaryData();
-        document.getElementById('eventModal').style.display = 'none';
-        this.showNotification('Event saved successfully!', 'success');
-        
-        if (this.config.autoSync && this.config.googleSheetUrl) {
-            this.syncWithGoogleSheets();
-        }
-    }
-
-    saveEventUpcoming() {
-        const formData = new FormData(document.getElementById('eventForm'));
-        const eventData = {
-            id: formData.get('eventId') || Date.now(),
-            name: formData.get('eventName'),
-            date: formData.get('eventDate'),
-            type: formData.get('eventType'),
-            prize: parseFloat(formData.get('eventPrize')) || 0,
-            expenses: 0,
-            photographer: formData.get('eventPhotographer'),
-            salary: 0,
-            duration: parseInt(formData.get('eventDuration')) || 1,
-            notes: formData.get('eventNotes') || '',
-            profit: 0,
-            status: 'upcoming',
-            createdAt: new Date().toISOString()
-        };
-        
-        const existingIndex = this.events.findIndex(e => e.id === eventData.id);
-        if (existingIndex !== -1) {
-            this.events[existingIndex] = eventData;
-        } else {
-            this.events.push(eventData);
-        }
-        
-        this.saveToLocalStorage();
-        this.refreshEventTables();
-        document.getElementById('eventModal').style.display = 'none';
-        this.showNotification('Upcoming event saved successfully!', 'success');
-        
-        if (this.config.autoSync && this.config.googleSheetUrl) {
-            this.syncWithGoogleSheets();
-        }
-    }
-
-    deleteEvent(eventId) {
-        if (confirm('Are you sure you want to delete this event?')) {
-            this.events = this.events.filter(e => e.id !== eventId);
-            this.saveToLocalStorage();
-            this.refreshEventTables();
-            this.updateSalaryData();
-            this.showNotification('Event deleted successfully!', 'success');
             
-            if (this.config.autoSync && this.config.googleSheetUrl) {
-                this.syncWithGoogleSheets();
-            }
-        }
-    }
-
-    calculateEventProfit() {
-        const prize = parseFloat(document.getElementById('eventPrize').value) || 0;
-        const expenses = parseFloat(document.getElementById('eventExpenses').value) || 0;
-        const salary = parseFloat(document.getElementById('eventSalary').value) || 0;
-        const profit = prize - expenses - salary;
-        
-        const profitDisplay = document.getElementById('eventProfitDisplay');
-        if (profitDisplay) {
-            profitDisplay.textContent = `${this.config.currencySymbol}${profit.toFixed(2)}`;
-            profitDisplay.className = profit >= 0 ? 'profit-positive' : 'profit-negative';
-        }
-    }
-
-    // ===== PHOTOGRAPHER MANAGEMENT =====
-    showPhotographerModal(photographerId = null) {
-        const modal = document.getElementById('photographerModal');
-        const form = document.getElementById('photographerForm');
-        const titleElement = document.getElementById('photographerModalTitle');
-        
-        if (photographerId) {
-            const photographer = this.photographers.find(p => p.id === photographerId);
-            if (photographer) {
-                titleElement.textContent = 'Edit Photographer';
-                this.populatePhotographerForm(photographer);
-            }
-        } else {
-            titleElement.textContent = 'Add New Photographer';
-            form.reset();
-            document.getElementById('photographerId').value = '';
-        }
-        
-        modal.style.display = 'block';
-    }
-
-    populatePhotographerForm(photographer) {
-        document.getElementById('photographerId').value = photographer.id;
-        document.getElementById('photographerName').value = photographer.name;
-        document.getElementById('photographerContact').value = photographer.contact;
-        document.getElementById('photographerEmail').value = photographer.email || '';
-        document.getElementById('photographerRate').value = photographer.rate;
-    }
-
-    savePhotographer() {
-        const formData = new FormData(document.getElementById('photographerForm'));
-        const photographerData = {
-            id: formData.get('photographerId') || Date.now(),
-            name: formData.get('photographerName'),
-            contact: formData.get('photographerContact'),
-            email: formData.get('photographerEmail') || '',
-            rate: parseFloat(formData.get('photographerRate')) || 0,
-            createdAt: new Date().toISOString()
-        };
-        
-        const existingIndex = this.photographers.findIndex(p => p.id === photographerData.id);
-        if (existingIndex !== -1) {
-            this.photographers[existingIndex] = photographerData;
-        } else {
-            this.photographers.push(photographerData);
-        }
-        
-        this.saveToLocalStorage();
-        this.refreshPhotographerTable();
-        this.populatePhotographerDropdowns();
-        document.getElementById('photographerModal').style.display = 'none';
-        this.showNotification('Photographer saved successfully!', 'success');
-        
-        if (this.config.autoSync && this.config.googleSheetUrl) {
-            this.syncWithGoogleSheets();
-        }
-    }
-
-    deletePhotographer(photographerId) {
-        if (photographerId === 1) {
-            this.showNotification('Cannot delete the default "Self" photographer!', 'error');
-            return;
-        }
-        
-        if (confirm('Are you sure you want to delete this photographer?')) {
-            this.photographers = this.photographers.filter(p => p.id !== photographerId);
-            this.saveToLocalStorage();
-            this.refreshPhotographerTable();
-            this.populatePhotographerDropdowns();
-            this.showNotification('Photographer deleted successfully!', 'success');
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
             
-            if (this.config.autoSync && this.config.googleSheetUrl) {
-                this.syncWithGoogleSheets();
-            }
-        }
-    }
-
-    // ===== ATTENDANCE MANAGEMENT =====
-    showAttendanceModal(recordId = null) {
-        const modal = document.getElementById('attendanceModal');
-        const form = document.getElementById('attendanceForm');
-        const titleElement = document.getElementById('attendanceModalTitle');
-        
-        if (recordId) {
-            const record = this.attendanceRecords.find(r => r.id === recordId);
-            if (record) {
-                titleElement.textContent = 'Edit Attendance';
-                this.populateAttendanceForm(record);
-            }
-        } else {
-            titleElement.textContent = 'Record Attendance';
-            form.reset();
-            document.getElementById('attendanceId').value = '';
-            document.getElementById('attendanceDate').value = new Date().toISOString().split('T')[0];
-        }
-        
-        this.populatePhotographerDropdown('attendancePhotographer');
-        modal.style.display = 'block';
-    }
-
-    populateAttendanceForm(record) {
-        document.getElementById('attendanceId').value = record.id;
-        document.getElementById('attendanceDate').value = record.date;
-        document.getElementById('attendancePhotographer').value = record.photographerId;
-        document.getElementById('attendanceStatus').value = record.status;
-        document.getElementById('attendanceDailyRate').value = record.dailyRate;
-        document.getElementById('attendanceNotes').value = record.notes || '';
-        this.calculateAttendanceEarnings();
-    }
-
-    saveAttendance() {
-        const formData = new FormData(document.getElementById('attendanceForm'));
-        const photographerId = parseInt(formData.get('attendancePhotographer'));
-        const photographer = this.photographers.find(p => p.id === photographerId);
-        
-        const attendanceData = {
-            id: formData.get('attendanceId') || Date.now(),
-            date: formData.get('attendanceDate'),
-            photographerId: photographerId,
-            photographerName: photographer ? photographer.name : 'Unknown',
-            status: formData.get('attendanceStatus'),
-            dailyRate: parseFloat(formData.get('attendanceDailyRate')) || 0,
-            earnings: 0,
-            notes: formData.get('attendanceNotes') || '',
-            timestamp: new Date().toISOString()
-        };
-        
-        // Calculate earnings based on status
-        const baseEarnings = attendanceData.dailyRate;
-        switch (attendanceData.status) {
-            case 'present':
-                attendanceData.earnings = baseEarnings;
-                break;
-            case 'half-day':
-                attendanceData.earnings = baseEarnings * 0.5;
-                break;
-            case 'absent':
-                attendanceData.earnings = 0;
-                break;
-            default:
-                attendanceData.earnings = 0;
-        }
-        
-        const existingIndex = this.attendanceRecords.findIndex(r => r.id === attendanceData.id);
-        if (existingIndex !== -1) {
-            this.attendanceRecords[existingIndex] = attendanceData;
-        } else {
-            this.attendanceRecords.push(attendanceData);
-        }
-        
-        this.saveToLocalStorage();
-        this.refreshAttendanceTable();
-        this.updateSalaryData();
-        document.getElementById('attendanceModal').style.display = 'none';
-        this.showNotification('Attendance recorded successfully!', 'success');
-        
-        if (this.config.autoSync && this.config.googleSheetUrl) {
-            this.syncWithGoogleSheets();
-        }
-    }
-
-    deleteAttendance(recordId) {
-        if (confirm('Are you sure you want to delete this attendance record?')) {
-            this.attendanceRecords = this.attendanceRecords.filter(r => r.id !== recordId);
-            this.saveToLocalStorage();
-            this.refreshAttendanceTable();
-            this.updateSalaryData();
-            this.showNotification('Attendance record deleted successfully!', 'success');
+            // Add active class to clicked nav tab
+            event.target.classList.add('active');
             
-            if (this.config.autoSync && this.config.googleSheetUrl) {
-                this.syncWithGoogleSheets();
+            // Update data when switching tabs
+            if (tabName === 'dashboard') {
+                updateDashboard();
+            } else if (tabName === 'events') {
+                loadEvents();
+            } else if (tabName === 'photographers') {
+                loadPhotographers();
+            } else if (tabName === 'analytics') {
+                updateAnalytics();
             }
         }
-    }
 
-    calculateAttendanceEarnings() {
-        const dailyRate = parseFloat(document.getElementById('attendanceDailyRate').value) || 0;
-        const status = document.getElementById('attendanceStatus').value;
-        
-        let earnings = 0;
-        switch (status) {
-            case 'present':
-                earnings = dailyRate;
-                break;
-            case 'half-day':
-                earnings = dailyRate * 0.5;
-                break;
-            case 'absent':
-                earnings = 0;
-                break;
-        }
-        
-        const earningsDisplay = document.getElementById('attendanceEarningsDisplay');
-        if (earningsDisplay) {
-            earningsDisplay.textContent = `${this.config.currencySymbol}${earnings.toFixed(2)}`;
-        }
-    }
-
-    // ===== EXPENSE MANAGEMENT =====
-    showExpenseModal(expenseId = null) {
-        const modal = document.getElementById('expenseModal');
-        const form = document.getElementById('expenseForm');
-        const titleElement = document.getElementById('expenseModalTitle');
-        
-        if (expenseId) {
-            const expense = this.expenseRecords.find(e => e.id === expenseId);
-            if (expense) {
-                titleElement.textContent = 'Edit Expense';
-                this.populateExpenseForm(expense);
-            }
-        } else {
-            titleElement.textContent = 'Add New Expense';
-            form.reset();
-            document.getElementById('expenseId').value = '';
-            document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0];
-        }
-        
-        modal.style.display = 'block';
-    }
-
-    populateExpenseForm(expense) {
-        document.getElementById('expenseId').value = expense.id;
-        document.getElementById('expenseDate').value = expense.date;
-        document.getElementById('expenseCategory').value = expense.category;
-        document.getElementById('expenseDescription').value = expense.description;
-        document.getElementById('expenseAmount').value = expense.amount;
-        document.getElementById('expensePaymentMode').value = expense.paymentMode;
-        document.getElementById('expenseRemarks').value = expense.remarks || '';
-    }
-
-    saveExpense() {
-        const formData = new FormData(document.getElementById('expenseForm'));
-        const expenseData = {
-            id: formData.get('expenseId') || Date.now(),
-            date: formData.get('expenseDate'),
-            category: formData.get('expenseCategory'),
-            description: formData.get('expenseDescription'),
-            amount: parseFloat(formData.get('expenseAmount')) || 0,
-            paymentMode: formData.get('expensePaymentMode'),
-            remarks: formData.get('expenseRemarks') || '',
-            timestamp: new Date().toISOString()
-        };
-        
-        const existingIndex = this.expenseRecords.findIndex(e => e.id === expenseData.id);
-        if (existingIndex !== -1) {
-            this.expenseRecords[existingIndex] = expenseData;
-        } else {
-            this.expenseRecords.push(expenseData);
-        }
-        
-        this.saveToLocalStorage();
-        this.refreshExpenseTable();
-        this.updateDashboardMetrics();
-        document.getElementById('expenseModal').style.display = 'none';
-        this.showNotification('Expense saved successfully!', 'success');
-        
-        if (this.config.autoSync && this.config.googleSheetUrl) {
-            this.syncWithGoogleSheets();
-        }
-    }
-
-    deleteExpense(expenseId) {
-        if (confirm('Are you sure you want to delete this expense?')) {
-            this.expenseRecords = this.expenseRecords.filter(e => e.id !== expenseId);
-            this.saveToLocalStorage();
-            this.refreshExpenseTable();
-            this.updateDashboardMetrics();
-            this.showNotification('Expense deleted successfully!', 'success');
+        // Event form submission
+        document.getElementById('eventForm').addEventListener('submit', function(e) {
+            e.preventDefault();
             
-            if (this.config.autoSync && this.config.googleSheetUrl) {
-                this.syncWithGoogleSheets();
-            }
-        }
-    }
-
-    // ===== SALARY MANAGEMENT =====
-    showPaymentModal(photographerId = null) {
-        const modal = document.getElementById('paymentModal');
-        const form = document.getElementById('paymentForm');
-        
-        if (photographerId) {
-            document.getElementById('paymentPhotographer').value = photographerId;
-        }
-        
-        this.populatePhotographerDropdown('paymentPhotographer');
-        document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
-        modal.style.display = 'block';
-    }
-
-    savePayment() {
-        const formData = new FormData(document.getElementById('paymentForm'));
-        const photographerId = parseInt(formData.get('paymentPhotographer'));
-        const photographer = this.photographers.find(p => p.id === photographerId);
-        
-        const paymentData = {
-            id: Date.now(),
-            paymentDate: formData.get('paymentDate'),
-            photographerId: photographerId,
-            photographerName: photographer ? photographer.name : 'Unknown',
-            amount: parseFloat(formData.get('paymentAmount')) || 0,
-            paymentMode: formData.get('paymentMode'),
-            remarks: formData.get('paymentRemarks') || '',
-            timestamp: new Date().toISOString()
-        };
-        
-        this.paymentHistory.push(paymentData);
-        this.saveToLocalStorage();
-        this.updateSalaryData();
-        this.refreshSalaryTable();
-        document.getElementById('paymentModal').style.display = 'none';
-        this.showNotification('Payment recorded successfully!', 'success');
-        
-        if (this.config.autoSync && this.config.googleSheetUrl) {
-            this.syncWithGoogleSheets();
-        }
-    }
-
-    updateSalaryData() {
-        const salaryData = {};
-        
-        // Calculate earnings from events
-        this.events.forEach(event => {
-            const photographerId = parseInt(event.photographer);
-            if (!salaryData[photographerId]) {
-                salaryData[photographerId] = {
-                    totalEarned: 0,
-                    totalPaid: 0,
-                    daysWorked: 0,
-                    lastPaymentDate: null
-                };
-            }
-            salaryData[photographerId].totalEarned += event.salary || 0;
-            salaryData[photographerId].daysWorked += event.duration || 0;
-        });
-        
-        // Calculate earnings from attendance
-        this.attendanceRecords.forEach(record => {
-            const photographerId = record.photographerId;
-            if (!salaryData[photographerId]) {
-                salaryData[photographerId] = {
-                    totalEarned: 0,
-                    totalPaid: 0,
-                    daysWorked: 0,
-                    lastPaymentDate: null
-                };
-            }
-            salaryData[photographerId].totalEarned += record.earnings || 0;
-            if (record.status === 'present') {
-                salaryData[photographerId].daysWorked += 1;
-            } else if (record.status === 'half-day') {
-                salaryData[photographerId].daysWorked += 0.5;
-            }
-        });
-        
-        // Calculate payments
-        this.paymentHistory.forEach(payment => {
-            const photographerId = payment.photographerId;
-            if (!salaryData[photographerId]) {
-                salaryData[photographerId] = {
-                    totalEarned: 0,
-                    totalPaid: 0,
-                    daysWorked: 0,
-                    lastPaymentDate: null
-                };
-            }
-            salaryData[photographerId].totalPaid += payment.amount || 0;
-            if (!salaryData[photographerId].lastPaymentDate || 
-                payment.paymentDate > salaryData[photographerId].lastPaymentDate) {
-                salaryData[photographerId].lastPaymentDate = payment.paymentDate;
-            }
-        });
-        
-        this.salaryData = salaryData;
-        this.saveToLocalStorage();
-    }
-
-    // ===== GOOGLE SHEETS INTEGRATION =====
-    async syncWithGoogleSheets() {
-        if (!this.config.googleSheetUrl) {
-            this.showNotification('Google Sheets URL not configured!', 'error');
-            return;
-        }
-        
-        try {
-            this.showNotification('Syncing with Google Sheets...', 'info');
-            
-            const syncData = {
-                action: 'sync',
-                events: JSON.stringify(this.events),
-                photographers: JSON.stringify(this.photographers),
-                attendance: JSON.stringify(this.attendanceRecords),
-                expenses: JSON.stringify(this.expenseRecords),
-                payments: JSON.stringify(this.paymentHistory),
-                salaryData: JSON.stringify(this.salaryData)
+            const formData = new FormData(e.target);
+            const eventData = {
+                id: Date.now(),
+                name: formData.get('eventName'),
+                date: formData.get('eventDate'),
+                prize: parseFloat(formData.get('eventPrize')),
+                expenses: parseFloat(formData.get('eventExpenses')) || 0,
+                photographer: formData.get('photographerName'),
+                salary: parseFloat(formData.get('photographerSalary')) || 0,
+                duration: parseInt(formData.get('eventDuration')),
+                type: formData.get('eventType'),
+                notes: formData.get('eventNotes'),
+                profit: parseFloat(formData.get('eventPrize')) - (parseFloat(formData.get('eventExpenses')) || 0) - (parseFloat(formData.get('photographerSalary')) || 0)
             };
             
-            const response = await fetch(this.config.googleSheetUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: new URLSearchParams(syncData)
+            events.push(eventData);
+            saveDataLocally();
+            
+            // Auto-sync if connected
+            if (isConnectedToSheets) {
+                syncToGoogleSheets();
+            }
+            
+            showNotification('Event added successfully!', 'success');
+            clearForm();
+            updateDashboard();
+        });
+
+        // Photographer form submission
+        document.getElementById('photographerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const photographerData = {
+                id: Date.now(),
+                name: formData.get('photographerNameAdd'),
+                contact: formData.get('photographerContact'),
+                email: formData.get('photographerEmail'),
+                rate: parseFloat(formData.get('photographerRate')) || 0
+            };
+            
+            photographers.push(photographerData);
+            saveDataLocally();
+            
+            // Auto-sync if connected
+            if (isConnectedToSheets) {
+                syncToGoogleSheets();
+            }
+            
+            // Update photographer dropdown
+            updatePhotographerDropdown();
+            
+            showNotification('Photographer added successfully!', 'success');
+            document.getElementById('photographerForm').reset();
+            loadPhotographers();
+        });
+
+        // Save data to localStorage
+        function saveDataLocally() {
+            localStorage.setItem('rn_studio_events', JSON.stringify(events));
+            localStorage.setItem('rn_studio_photographers', JSON.stringify(photographers));
+        }
+
+        // Update photographer dropdown
+        function updatePhotographerDropdown() {
+            const select = document.getElementById('photographerName');
+            select.innerHTML = '<option value="">Select Photographer</option>';
+            
+            photographers.forEach(photographer => {
+                const option = document.createElement('option');
+                option.value = photographer.name;
+                option.textContent = photographer.name;
+                select.appendChild(option);
             });
-            
-            if (response.ok) {
-                const result = await response.text();
-                this.showNotification('Data synced successfully!', 'success');
-                localStorage.setItem('lastSyncTime', new Date().toISOString());
-            } else {
-                throw new Error('Sync failed');
-            }
-        } catch (error) {
-            console.error('Sync error:', error);
-            this.showNotification('Sync failed. Please check your connection.', 'error');
         }
-    }
 
-    async loadFromGoogleSheets() {
-        if (!this.config.googleSheetUrl) {
-            this.showNotification('Google Sheets URL not configured!', 'error');
-            return;
-        }
-        
-        try {
-            this.showNotification('Loading data from Google Sheets...', 'info');
+        // Load events table
+        function loadEvents() {
+            const tbody = document.getElementById('eventsTableBody');
+            tbody.innerHTML = '';
             
-            const response = await fetch(`${this.config.googleSheetUrl}?action=load`);
-            
-            if (response.ok) {
-                const data = await response.json();
-                
-                if (data.events) this.events = data.events;
-                if (data.photographers) this.photographers = data.photographers;
-                if (data.attendance) this.attendanceRecords = data.attendance;
-                if (data.expenses) this.expenseRecords = data.expenses;
-                if (data.payments) this.paymentHistory = data.payments;
-                if (data.salaryData) this.salaryData = data.salaryData;
-                
-                this.saveToLocalStorage();
-                this.loadDashboard();
-                this.showNotification('Data loaded successfully!', 'success');
-            } else {
-                throw new Error('Load failed');
+            if (events.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: #666;">No events found</td></tr>';
+                return;
             }
-        } catch (error) {
-            console.error('Load error:', error);
-            this.showNotification('Failed to load data from Google Sheets.', 'error');
-        }
-    }
-
-    // ===== UI MANAGEMENT =====
-    showSection(sectionId) {
-        // Hide all sections
-        document.querySelectorAll('.section').forEach(section => {
-            section.classList.remove('active');
-        });
-        
-        // Show selected section
-        const targetSection = document.getElementById(sectionId);
-        if (targetSection) {
-            targetSection.classList.add('active');
-        }
-        
-        // Update navigation
-        document.querySelectorAll('.nav-link').forEach(link => {
-            link.classList.remove('active');
-        });
-        
-        const activeLink = document.querySelector(`[data-target="${sectionId}"]`);
-        if (activeLink) {
-            activeLink.classList.add('active');
-        }
-        
-        // Refresh section-specific data
-        switch (sectionId) {
-            case 'eventsSection':
-                this.refreshEventTables();
-                break;
-            case 'photographersSection':
-                this.refreshPhotographerTable();
-                break;
-            case 'attendanceSection':
-                this.refreshAttendanceTable();
-                break;
-            case 'expensesSection':
-                this.refreshExpenseTable();
-                break;
-            case 'salarySection':
-                this.refreshSalaryTable();
-                break;
-            case 'dashboardSection':
-                this.loadDashboard();
-                break;
-        }
-    }
-    showNotification(message, type = 'info') {
-        const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
-        notification.textContent = message;
-        document.body.appendChild(notification);
-        
-        // Automatically remove notification after 5 seconds
-        setTimeout(() => {
-            notification.remove();
-        }, 5000);
-    }
-    toggleTheme() {
-        const body = document.body;
-        body.classList.toggle('dark-mode');
-        this.config.darkMode = body.classList.contains('dark-mode');
-        localStorage.setItem('darkMode', this.config.darkMode);
-        
-        this.showNotification(`Theme switched to ${this.config.darkMode ? 'Dark' : 'Light'} mode`, 'info');
-    }
-    saveToLocalStorage() {
-        localStorage.setItem('events', JSON.stringify(this.events));
-        localStorage.setItem('photographers', JSON.stringify(this.photographers));
-        localStorage.setItem('attendanceRecords', JSON.stringify(this.attendanceRecords));
-        localStorage.setItem('expenses', JSON.stringify(this.expenseRecords));
-        localStorage.setItem('payments', JSON.stringify(this.paymentHistory));
-        localStorage.setItem('salaryData', JSON.stringify(this.salaryData));
-    }
-    loadDashboard() {
-        // Load dashboard metrics and render summary
-        this.updateDashboardMetrics();
-        this.renderSummaryDashboard();
-    }
-    updateDashboardMetrics() {
-        const totalEvents = this.events.length;
-        const totalPhotographers = this.photographers.length;
-        const totalAttendance = this.attendanceRecords.length;
-        const totalExpenses = this.expenseRecords.reduce((sum, e) => sum + (e.amount || 0), 0);
-        const totalPayments = this.paymentHistory.reduce((sum, p) => sum + (p.amount || 0), 0);
-        const totalEarnings = Object.values(this.salaryData).reduce((sum, data) => sum + (data.totalEarned || 0), 0);
-        const totalProfit = totalEarnings - totalExpenses - totalPayments;
-        const lastSyncTime = localStorage.getItem('lastSyncTime') || 'Never';
-        const dashboardMetrics = {
-            totalEvents,
-            totalPhotographers,
-            totalAttendance,
-            totalExpenses: `${this.config.currencySymbol}${totalExpenses.toFixed(2)}`,
-            totalPayments: `${this.config.currencySymbol}${totalPayments.toFixed(2)}`,
-            totalEarnings: `${this.config.currencySymbol}${totalEarnings.toFixed(2)}`,
-            totalProfit: `${this.config.currencySymbol}${totalProfit.toFixed(2)}`,
-            lastSyncTime
-        };
-        const dashboardElement = document.getElementById('dashboardMetrics');
-        if (dashboardElement) {
-            dashboardElement.innerHTML = `
-                <h2>Dashboard Metrics</h2>
-                <ul>
-                    <li>Total Events: ${dashboardMetrics.totalEvents}</li>
-                    <li>Total Photographers: ${dashboardMetrics.totalPhotographers}</li>
-                    <li>Total Attendance Records: ${dashboardMetrics.totalAttendance}</li>
-                    <li>Total Expenses: ${dashboardMetrics.totalExpenses}</li>
-                    <li>Total Payments: ${dashboardMetrics.totalPayments}</li>
-                    <li>Total Earnings: ${dashboardMetrics.totalEarnings}</li>
-                    <li>Total Profit: ${dashboardMetrics.totalProfit}</li>
-                    <li>Last Sync Time: ${dashboardMetrics.lastSyncTime}</li>
-                </ul>
-            `;
-        }
-    }
-    renderSummaryDashboard() {
-        const summaryElement = document.getElementById('summaryDashboard');
-        if (!summaryElement) return;
-        summaryElement.innerHTML = '';
-        const totalEvents = this.events.length;
-        const totalPhotographers = this.photographers.length;
-        const totalAttendance = this.attendanceRecords.length;
-        const totalExpenses = this.expenseRecords.reduce((sum, e) => sum + (e.amount || 0), 0);
-        const totalPayments = this.paymentHistory.reduce((sum, p) => sum + (p.amount || 0), 0);
-        const totalEarnings = Object.values(this.salaryData).reduce((sum, data) => sum + (data.totalEarned || 0), 0);
-        const totalProfit = totalEarnings - totalExpenses - totalPayments;
-        const lastSyncTime = localStorage.getItem('lastSyncTime') || 'Never';
-        summaryElement.innerHTML = `
-            <h2>Summary Dashboard</h2>
-            <ul>
-                <li>Total Events: ${totalEvents}</li>
-                <li>Total Photographers: ${totalPhotographers}</li>
-                <li>Total Attendance Records: ${totalAttendance}</li>
-                <li>Total Expenses: ${this.config.currencySymbol}${totalExpenses.toFixed(2)}</li>
-                <li>Total Payments: ${this.config.currencySymbol}${totalPayments.toFixed(2)}</li>
-                <li>Total Earnings: ${this.config.currencySymbol}${totalEarnings.toFixed(2)}</li>
-                <li>Total Profit: ${this.config.currencySymbol}${totalProfit.toFixed(2)}</li>
-                <li>Last Sync Time: ${lastSyncTime}</li>
-            </ul>
-        `;
-    }
-    refreshEventTables() {
-        const completedEventsTable = document.getElementById('completedEventsTable');
-        const upcomingEventsTable = document.getElementById('upcomingEventsTable');
-        if (completedEventsTable) {
-            completedEventsTable.innerHTML = '';
-            this.events.filter(e => e.status === 'completed').forEach(event => {
+            
+            events.forEach(event => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${event.name}</td>
-                    <td>${event.date}</td>
+                    <td>${new Date(event.date).toLocaleDateString()}</td>
                     <td>${event.type}</td>
-                    <td>${this.config.currencySymbol}${event.prize.toFixed(2)}</td>
-                    <td>${this.config.currencySymbol}${event.expenses.toFixed(2)}</td>
-                    <td>${event.photographerName}</td>
-                    <td>${this.config.currencySymbol}${event.salary.toFixed(2)}</td>
+                    <td>₹${event.prize.toLocaleString()}</td>
+                    <td>₹${event.expenses.toLocaleString()}</td>
+                    <td>${event.photographer}</td>
+                    <td>₹${event.salary.toLocaleString()}</td>
                     <td>${event.duration} days</td>
-                    <td>${event.profit >= 0 ? `<span class="profit-positive">${this.config.currencySymbol}${event.profit.toFixed(2)}</span>` : `<span class="profit-negative">${this.config.currencySymbol}${event.profit.toFixed(2)}</span>`}</td>
+                    <td style="color: ${event.profit >= 0 ? 'green' : 'red'}">₹${event.profit.toLocaleString()}</td>
                     <td>
-                        <button class="btn btn-primary" onclick="app.showEventModal(${event.id})">Edit</button>
-                        <button class="btn btn-danger" onclick="app.deleteEvent(${event.id})">Delete</button>
+                        <button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px;" onclick="deleteEvent(${event.id})">Delete</button>
                     </td>
                 `;
-                completedEventsTable.appendChild(row);
+                tbody.appendChild(row);
             });
         }
-        if (upcomingEventsTable) {
-            upcomingEventsTable.innerHTML = '';
-            this.events.filter(e => e.status === 'upcoming').forEach(event => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${event.name}</td>
-                    <td>${event.date}</td>
-                    <td>${event.type}</td>
-                    <td>${this.config.currencySymbol}${event.prize.toFixed(2)}</td>
-                    <td>${event.photographerName}</td>
-                    <td>${event.duration} days</td>
-                    <td>
-                        <button class="btn btn-primary" onclick="app.showEventModal(${event.id})">Edit</button>
-                        <button class="btn btn-danger" onclick="app.deleteEvent(${event.id})">Delete</button>
-                    </td>
-                `;
-                upcomingEventsTable.appendChild(row);
-            });
-        }
-    }
-    refreshPhotographerTable() {
-        const photographerTable = document.getElementById('photographerTable');
-        if (photographerTable) {
-            photographerTable.innerHTML = '';
-            this.photographers.forEach(photographer => {
+
+        // Load photographers table
+        function loadPhotographers() {
+            const tbody = document.getElementById('photographersTableBody');
+            tbody.innerHTML = '';
+            
+            if (photographers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #666;">No photographers found</td></tr>';
+                return;
+            }
+            
+            photographers.forEach(photographer => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${photographer.name}</td>
                     <td>${photographer.contact}</td>
-                    <td>${photographer.email || 'N/A'}</td>
-                    <td>${this.config.currencySymbol}${photographer.rate.toFixed(2)}</td>
+                    <td>${photographer.email}</td>
+                    <td>₹${photographer.rate.toLocaleString()}</td>
                     <td>
-                        <button class="btn btn-primary" onclick="app.showPhotographerModal(${photographer.id})">Edit</button>
-                        <button class="btn btn-danger" onclick="app.deletePhotographer(${photographer.id})">Delete</button>
+                        <button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px;" onclick="deletePhotographer(${photographer.id})">Delete</button>
                     </td>
                 `;
-                photographerTable.appendChild(row);
+                tbody.appendChild(row);
             });
         }
-    }
-    refreshAttendanceTable() {
-        const attendanceTable = document.getElementById('attendanceTable');
-        if (attendanceTable) {
-            attendanceTable.innerHTML = '';
-            this.attendanceRecords.forEach(record => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${record.date}</td>
-                    <td>${record.photographerName}</td>
-                    <td>${record.status}</td>
-                    <td>${this.config.currencySymbol}${record.dailyRate.toFixed(2)}</td>
-                    <td>${this.config.currencySymbol}${record.earnings.toFixed(2)}</td>
-                    <td>
-                        <button class="btn btn-primary" onclick="app.showAttendanceModal(${record.id})">Edit</button>
-                        <button class="btn btn-danger" onclick="app.deleteAttendance(${record.id})">Delete</button>
-                    </td>
-                `;
-                attendanceTable.appendChild(row);
-            });
+
+        // Update dashboard
+        function updateDashboard() {
+            const totalEvents = events.length;
+            const totalRevenue = events.reduce((sum, event) => sum + event.prize, 0);
+            const totalExpenses = events.reduce((sum, event) => sum + event.expenses + event.salary, 0);
+            const netProfit = totalRevenue - totalExpenses;
+            
+            document.getElementById('totalEvents').textContent = totalEvents;
+            document.getElementById('totalRevenue').textContent = '₹' + totalRevenue.toLocaleString();
+            document.getElementById('totalExpenses').textContent = '₹' + totalExpenses.toLocaleString();
+            document.getElementById('netProfit').textContent = '₹' + netProfit.toLocaleString();
+            
+            // Update recent events
+            const recentEvents = events.slice(-5).reverse();
+            const tbody = document.getElementById('recentEventsBody');
+            tbody.innerHTML = '';
+            
+            if (recentEvents.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #666;">No events found</td></tr>';
+            } else {
+                recentEvents.forEach(event => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${event.name}</td>
+                        <td>${new Date(event.date).toLocaleDateString()}</td>
+                        <td>₹${event.prize.toLocaleString()}</td>
+                        <td>${event.photographer}</td>
+                        <td><span class="status-indicator status-connected">Completed</span></td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
         }
-    }
-    refreshExpenseTable() {
-        const expenseTable = document.getElementById('expenseTable');
-        if (expenseTable) {
-            expenseTable.innerHTML = '';
-            this.expenseRecords.forEach(expense => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${expense.date}</td>
-                    <td>${expense.category}</td>
-                    <td>${expense.description}</td>
-                    <td>${this.config.currencySymbol}${expense.amount.toFixed(2)}</td>
-                    <td>${expense.paymentMode}</td>
-                    <td>${expense.remarks || 'N/A'}</td>
-                    <td>
-                        <button class="btn btn-primary" onclick="app.showExpenseModal(${expense.id})">Edit</button>
-                        <button class="btn btn-danger" onclick="app.deleteExpense(${expense.id})">Delete</button>
-                    </td>
-                `;
-                expenseTable.appendChild(row);
+
+        // Update analytics
+        function updateAnalytics() {
+            const avgEventValue = events.length > 0 ? events.reduce((sum, event) => sum + event.prize, 0) / events.length : 0;
+            const currentMonth = new Date().getMonth();
+            const currentYear = new Date().getFullYear();
+            const monthRevenue = events.filter(event => {
+                const eventDate = new Date(event.date);
+                return eventDate.getMonth() === currentMonth && eventDate.getFullYear() === currentYear;
+            }).reduce((sum, event) => sum + event.prize, 0);
+            
+            const eventTypes = {};
+            events.forEach(event => {
+                eventTypes[event.type] = (eventTypes[event.type] || 0) + 1;
             });
+            
+            const popularEventType = Object.keys(eventTypes).length > 0 ? 
+                Object.keys(eventTypes).reduce((a, b) => eventTypes[a] > eventTypes[b] ? a : b) : '-';
+            
+            const totalEventDays = events.reduce((sum, event) => sum + event.duration, 0);
+            
+            document.getElementById('avgEventValue').textContent = '₹' + Math.round(avgEventValue).toLocaleString();
+            document.getElementById('monthRevenue').textContent = '₹' + monthRevenue.toLocaleString();
+            document.getElementById('popularEventType').textContent = popularEventType;
+            document.getElementById('totalEventDays').textContent = totalEventDays;
         }
-    }
-    refreshSalaryTable() {
-        const salaryTable = document.getElementById('salaryTable');
-        if (salaryTable) {
-            salaryTable.innerHTML = '';
-            Object.keys(this.salaryData).forEach(photographerId => {
-                const data = this.salaryData[photographerId];
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${data.photographerName || 'Unknown'}</td>
-                    <td>${data.totalEarned.toFixed(2)}</td>
-                    <td>${data.totalPaid.toFixed(2)}</td>
-                    <td>${data.daysWorked}</td>
-                    <td>${data.lastPaymentDate || 'N/A'}</td>
-                `;
-                salaryTable.appendChild(row);
-            });
+
+        // Utility functions
+        function clearForm() {
+            document.getElementById('eventForm').reset();
         }
-    }
-    populatePhotographerDropdowns() {
-        const photographerSelects = document.querySelectorAll('.photographer-select');
-        photographerSelects.forEach(select => {
-            select.innerHTML = '';
-            this.photographers.forEach(photographer => {
-                const option = document.createElement('option');
-                option.value = photographer.id;
-                option.textContent = photographer.name;
-                select.appendChild(option);
-            });
+
+        function deleteEvent(id) {
+            if (confirm('Are you sure you want to delete this event?')) {
+                events = events.filter(event => event.id !== id);
+                localStorage.setItem('rn_studio_events', JSON.stringify(events));
+                loadEvents();
+                updateDashboard();
+            }
+        }
+
+        function deletePhotographer(id) {
+            if (confirm('Are you sure you want to delete this photographer?')) {
+                photographers = photographers.filter(photographer => photographer.id !== id);
+                localStorage.setItem('rn_studio_photographers', JSON.stringify(photographers));
+                updatePhotographerDropdown();
+                loadPhotographers();
+            }
+        }
+
+        // Search and filter functions
+        document.getElementById('searchEvents').addEventListener('input', function() {
+            filterEvents();
         });
+
+        document.getElementById('filterType').addEventListener('change', function() {
+            filterEvents();
+        });
+
+        function filterEvents() {
+            const searchTerm = document.getElementById('searchEvents').value.toLowerCase();
+            const filterType = document.getElementById('filterType').value;
+            
+            let filteredEvents = events;
+            
+            if (searchTerm) {
+                filteredEvents = filteredEvents.filter(event => 
+                    event.name.toLowerCase().includes(searchTerm) ||
+                    event.photographer.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            if (filterType) {
+                filteredEvents = filteredEvents.filter(event => event.type === filterType);
+            }
+            
+            displayFilteredEvents(filteredEvents);
+        }
+
+        function displayFilteredEvents(filteredEvents) {
+            const tbody = document.getElementById('eventsTableBody');
+            tbody.innerHTML = '';
+            
+            if (filteredEvents.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: #666;">No events found</td></tr>';
+                return;
+            }
+            
+            filteredEvents.forEach(event => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${event.name}</td>
+                    <td>${new Date(event.date).toLocaleDateString()}</td>
+                    <td>${event.type}</td>
+                    <td>₹${event.prize.toLocaleString()}</td>
+                    <td>₹${event.expenses.toLocaleString()}</td>
+                    <td>${event.photographer}</td>
+                    <td>₹${event.salary.toLocaleString()}</td>
+                    <td>${event.duration} days</td>
+                    <td style="color: ${event.profit >= 0 ? 'green' : 'red'}">₹${event.profit.toLocaleString()}</td>
+                    <td>
+                        <button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px;" onclick="deleteEvent(${event.id})">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Google Sheets integration
+        function connectGoogleSheets() {
+    const url = document.getElementById('googleSheetUrl').value;
+    if (!url) {
+        alert('Please enter the Google Apps Script URL');
+        return;
+    }
+    
+    // Store the URL
+    localStorage.setItem('rn_studio_sheets_url', url);
+    sheetsUrl = url;
+    
+    // First check if data already exists in sheets
+    checkSheetsData().then(hasData => {
+        if (hasData) {
+            // Data exists in sheets, ask user what to do
+            const choice = confirm(
+                'Data already exists in Google Sheets. Click OK to load data from sheets, or Cancel to upload your local data to sheets.'
+            );
+            
+            if (choice) {
+                // Load from sheets
+                loadFromGoogleSheets();
+            } else {
+                // Upload local data to sheets
+                uploadLocalDataToSheets();
+            }
+        } else {
+            // No data in sheets, upload local data
+            uploadLocalDataToSheets();
+        }
+        
+        // Update UI
+        updateConnectionStatus(true);
+    }).catch(error => {
+        console.error('Error connecting to Google Sheets:', error);
+        // Still mark as connected for sync purposes
+        updateConnectionStatus(true);
+        // Upload local data as fallback
+        uploadLocalDataToSheets();
+    });
+}
+function checkSheetsData() {
+    return new Promise((resolve, reject) => {
+        const url = localStorage.getItem('rn_studio_sheets_url');
+        if (!url) {
+            reject('No URL configured');
+            return;
+        }
+        
+        const callback = 'checkDataCallback' + Date.now();
+        
+        // Create JSONP callback
+        window[callback] = function(data) {
+            resolve(data.hasData);
+            delete window[callback];
+            document.body.removeChild(script);
+        };
+        
+        // Create script tag for JSONP
+        const script = document.createElement('script');
+        script.src = url + '?action=checkData&callback=' + callback;
+        script.onerror = () => {
+            reject('Failed to check sheets data');
+            delete window[callback];
+            document.body.removeChild(script);
+        };
+        
+        document.body.appendChild(script);
+    });
+}
+
+function updateConnectionStatus(connected) {
+    const statusElement = document.getElementById('connectionStatus');
+    const manualSyncBtn = document.getElementById('manualSyncBtn');
+    const loadFromSheetsBtn = document.getElementById('loadFromSheetsBtn');
+    
+    if (connected) {
+        statusElement.textContent = 'Connected';
+        statusElement.className = 'status-indicator status-connected';
+        manualSyncBtn.disabled = false;
+        loadFromSheetsBtn.disabled = false;
+        isConnectedToSheets = true;
+        showNotification('Connected to Google Sheets successfully!', 'success');
+    } else {
+        statusElement.textContent = 'Disconnected';
+        statusElement.className = 'status-indicator status-disconnected';
+        manualSyncBtn.disabled = true;
+        loadFromSheetsBtn.disabled = true;
+        isConnectedToSheets = false;
     }
 }
-</script>
 
-    </div>
+function uploadLocalDataToSheets() {
+    if (events.length === 0 && photographers.length <= 1) {
+        showNotification('No local data to upload', 'info');
+        return;
+    }
+    
+    showNotification('Uploading local data to Google Sheets...', 'info');
+    syncToGoogleSheets(false, true); // false = no manual notification, true = initial upload
+}
+
+        // Data management functions
+        function exportData() {
+            const data = {
+                events: events,
+                photographers: photographers,
+                exportDate: new Date().toISOString()
+            };
+            
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = 'rn_studio_backup_' + new Date().toISOString().split('T')[0] + '.json';
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        }
+
+        function importData() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        if (data.events && data.photographers) {
+                            if (confirm('This will replace all current data. Are you sure?')) {
+                                events = data.events;
+                                photographers = data.photographers;
+                                localStorage.setItem('rn_studio_events', JSON.stringify(events));
+                                localStorage.setItem('rn_studio_photographers', JSON.stringify(photographers));
+                                updatePhotographerDropdown();
+                                updateDashboard();
+                                alert('Data imported successfully!');
+                            }
+                        } else {
+                            alert('Invalid backup file format.');
+                        }
+                    } catch (error) {
+                        alert('Error reading backup file.');
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        function clearAllData() {
+            if (confirm('This will permanently delete all your data. Are you sure?')) {
+                if (confirm('Last chance! This action cannot be undone.')) {
+                    events = [];
+                    photographers = [{id: 1, name: 'Self', contact: '', email: '', rate: 0}];
+                    localStorage.setItem('rn_studio_events', JSON.stringify(events));
+                    localStorage.setItem('rn_studio_photographers', JSON.stringify(photographers));
+                    updatePhotographerDropdown();
+                    updateDashboard();
+                    loadEvents();
+                    loadPhotographers();
+                    alert('All data cleared successfully!');
+                }
+            }
+        }
+
+        function syncToGoogleSheets(manual = false, initialUpload = false) {
+    const url = localStorage.getItem('rn_studio_sheets_url');
+    if (!url) {
+        if (manual) {
+            showNotification('Google Sheets not configured', 'error');
+        }
+        return;
+    }
+    
+    // Create hidden iframe to prevent page navigation
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.name = 'syncFrame';
+    document.body.appendChild(iframe);
+    
+    // Use form submission to hidden iframe
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = url;
+    form.target = 'syncFrame';
+    form.style.display = 'none';
+    
+    const actionInput = document.createElement('input');
+    actionInput.type = 'hidden';
+    actionInput.name = 'action';
+    actionInput.value = 'sync';
+    form.appendChild(actionInput);
+    
+    const eventsInput = document.createElement('input');
+    eventsInput.type = 'hidden';
+    eventsInput.name = 'events';
+    eventsInput.value = JSON.stringify(events);
+    form.appendChild(eventsInput);
+    
+    const photographersInput = document.createElement('input');
+    photographersInput.type = 'hidden';
+    photographersInput.name = 'photographers';
+    photographersInput.value = JSON.stringify(photographers);
+    form.appendChild(photographersInput);
+    
+    document.body.appendChild(form);
+    form.submit();
+    
+    // Clean up after a delay
+    setTimeout(() => {
+        if (document.body.contains(form)) document.body.removeChild(form);
+        if (document.body.contains(iframe)) document.body.removeChild(iframe);
+    }, 2000);
+    
+    // Show appropriate notification
+    if (manual) {
+        showNotification('Data synced to Google Sheets!', 'success');
+    } else if (initialUpload) {
+        showNotification('Local data uploaded to Google Sheets!', 'success');
+    }
+}
+        // Auto-sync when data changes
+        function saveAndSync() {
+            localStorage.setItem('rn_studio_events', JSON.stringify(events));
+            localStorage.setItem('rn_studio_photographers', JSON.stringify(photographers));
+            syncToGoogleSheets();
+        }
+
+        // Enhanced form validation
+        document.getElementById('eventForm').addEventListener('input', function(e) {
+            const target = e.target;
+            if (target.name === 'photographerName' && target.value) {
+                const photographer = photographers.find(p => p.name === target.value);
+                if (photographer && photographer.rate > 0) {
+                    document.getElementById('photographerSalary').value = photographer.rate;
+                }
+            }
+        });
+
+
+        // Load data from Google Sheets
+function loadFromGoogleSheets() {
+    return new Promise((resolve, reject) => {
+        const url = localStorage.getItem('rn_studio_sheets_url');
+        if (!url) {
+            reject('Google Sheets not configured');
+            return;
+        }
+        
+        const callback = 'loadDataCallback' + Date.now();
+        
+        // Create JSONP callback
+        window[callback] = function(data) {
+            try {
+                if (data.events && data.photographers) {
+                    events = data.events;
+                    photographers = data.photographers;
+                    saveDataLocally();
+                    updatePhotographerDropdown();
+                    updateDashboard();
+                    loadEvents();
+                    loadPhotographers();
+                    showNotification('Data loaded from Google Sheets successfully!', 'success');
+                    resolve(data);
+                } else {
+                    reject('Invalid data format');
+                }
+            } catch (error) {
+                reject('Error processing data: ' + error.message);
+            }
+            
+            delete window[callback];
+            document.body.removeChild(script);
+        };
+        
+        // Create script tag for JSONP
+        const script = document.createElement('script');
+        script.src = url + '?action=load&callback=' + callback;
+        script.onerror = () => {
+            reject('Failed to load data from Google Sheets');
+            delete window[callback];
+            if (document.body.contains(script)) {
+                document.body.removeChild(script);
+            }
+        };
+        
+        document.body.appendChild(script);
+    });
+}        
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 'n':
+                        e.preventDefault();
+                        showTab('add-event');
+                        break;
+                    case 'e':
+                        e.preventDefault();
+                        exportData();
+                        break;
+                    case 's':
+                        e.preventDefault();
+                        syncToGoogleSheets();
+                        break;
+                }
+            }
+        });
+
+function initializeApp() {
+    updatePhotographerDropdown();
+    updateDashboard();
+    
+    // Check for Google Sheets connection
+    const storedSheetsUrl = localStorage.getItem('rn_studio_sheets_url');
+    if (storedSheetsUrl) {
+        document.getElementById('googleSheetUrl').value = storedSheetsUrl;
+        sheetsUrl = storedSheetsUrl;
+        updateConnectionStatus(true);
+        
+        // Don't automatically load from sheets on startup
+        // Let user decide when to sync
+        console.log('Google Sheets URL found, ready for manual sync');
+    }
+}
+        // Auto-save every 5 minutes (300000 ms) - less annoying
+setInterval(() => {
+    localStorage.setItem('rn_studio_events', JSON.stringify(events));
+    localStorage.setItem('rn_studio_photographers', JSON.stringify(photographers));
+    syncToGoogleSheets(); // No notification for auto-sync
+}, 300000);
+
+        // Initialize when page loads
+        window.addEventListener('load', initializeApp);
+        
+        // Handle page unload
+        window.addEventListener('beforeunload', function() {
+            saveAndSync();
+        });
+
+        // Add notification system
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 5px;
+                color: white;
+                font-weight: bold;
+                z-index: 1000;
+                opacity: 0;
+                transform: translateY(-20px);
+                transition: all 0.3s ease;
+                ${type === 'success' ? 'background: #28a745;' : 
+                  type === 'error' ? 'background: #dc3545;' : 
+                  'background: #17a2b8;'}
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '1';
+                notification.style.transform = 'translateY(0)';
+            }, 100);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateY(-20px)';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        // Enhanced error handling
+        window.addEventListener('error', function(e) {
+            console.error('Application error:', e);
+            showNotification('An error occurred. Please try again.', 'error');
+        });
+        
+        // Service worker registration for offline support
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                        console.log('ServiceWorker registration successful');
+                    })
+                    .catch(function(err) {
+                        console.log('ServiceWorker registration failed');
+                    });
+            });
+        }
+        // Disconnect Google Sheets
+        function disconnectGoogleSheets() {
+    if (confirm('Are you sure you want to disconnect from Google Sheets?')) {
+        localStorage.removeItem('rn_studio_sheets_url');
+        sheetsUrl = '';
+        document.getElementById('googleSheetUrl').value = '';
+        updateConnectionStatus(false);
+        showNotification('Disconnected from Google Sheets', 'info');
+    }
+}
+    </script>
 </body>
 </html>
