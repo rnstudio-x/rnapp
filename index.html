@@ -1922,7 +1922,10 @@ function loadFromGoogleSheets() {
         }
         
         const callback = 'loadDataCallback' + Date.now();
-        
+
+        // Create script tag for JSONP
+        const script = document.createElement('script');
+
         // Create JSONP callback
         window[callback] = function(data) {
             try {
@@ -1954,9 +1957,7 @@ function loadFromGoogleSheets() {
             delete window[callback];
             document.body.removeChild(script);
         };
-        
-        // Create script tag for JSONP
-        const script = document.createElement('script');
+
         script.src = url + '?action=load&callback=' + callback;
         script.onerror = () => {
             reject('Failed to load data from Google Sheets');
