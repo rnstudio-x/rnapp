@@ -1904,7 +1904,7 @@ function updateConnectionStatus(connected) {
 }
 
 function uploadLocalDataToSheets() {
-    if (events.length === 0 && photographers.length <= 1) {
+    if (events.length === 0 && photographers.length <= 1 && attendanceRecords.length === 0 && salaryPayments.length === 0 && expenses.length === 0) {
         showNotification('No local data to upload', 'info');
         return;
     }
@@ -2083,6 +2083,9 @@ function syncToGoogleSheets(manual = false, initialUpload = false) {
         function saveAndSync() {
             localStorage.setItem('rn_studio_events', JSON.stringify(events));
             localStorage.setItem('rn_studio_photographers', JSON.stringify(photographers));
+            localStorage.setItem('rn_studio_attendance', JSON.stringify(attendanceRecords));
+            localStorage.setItem('rn_studio_salary_payments', JSON.stringify(salaryPayments));
+            localStorage.setItem('rn_studio_expenses', JSON.stringify(expenses));
             syncToGoogleSheets();
         }
 
@@ -2196,6 +2199,9 @@ function initializeApp() {
 setInterval(() => {
     localStorage.setItem('rn_studio_events', JSON.stringify(events));
     localStorage.setItem('rn_studio_photographers', JSON.stringify(photographers));
+    localStorage.setItem('rn_studio_attendance', JSON.stringify(attendanceRecords));
+    localStorage.setItem('rn_studio_expenses', JSON.stringify(expenses));
+    localStorage.setItem('rn_studio_salary_payments', JSON.stringify(salaryPayments));
     syncToGoogleSheets(); // No notification for auto-sync
 }, 300000);
 
