@@ -1285,7 +1285,7 @@ document.getElementById('salaryPaymentForm').addEventListener('submit', function
         photographer: formData.get('paymentPhotographer'),
         amount: parseFloat(formData.get('paymentAmount')),
         date: formData.get('paymentDate'),
-        mode: formData.get('paymentMode'),
+        paymentMode: formData.get('paymentMode'),
         remarks: formData.get('paymentRemarks') || '',
         timestamp: new Date().toISOString()
     };
@@ -1804,6 +1804,59 @@ function deleteExpense(id) {
                     <td style="color: ${event.profit >= 0 ? 'green' : 'red'}">₹${event.profit.toLocaleString()}</td>
                     <td>
                         <button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px;" onclick="deleteEvent(${event.id})">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        //search && filter option for Attendance
+        document.getElementById('atendanceFilterPhotographer').addEventListener('input', function() {
+            filterAttendance();
+        });
+
+        document.getElementById('atendanceFilterPhotographer').addEventListener('change', function() {
+            filterAttendance();
+        });
+
+        function filterAttendance() {
+            const searchTerm = document.getElementById('attendanceFilterPhotographer').value.toLowerCase();
+            const filteredRecords = attendanceRecords.filter(record => 
+                record.photographer.toLowerCase().includes(searchTerm)
+            );
+            displayFilteredAttendance(filteredRecords);
+        }
+
+        function displayFilteredAttendance(filteredRecords) {
+            const tbody = document.getElementById('attendanceTableBody');
+            tbody.innerHTML = '';
+            
+            if (filteredRecords.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #666;">No attendance records found</td></tr>';
+                return;
+            }
+            
+            filteredRecords.forEach(record => {
+                const photographer = photographers.find(p => p.name === record.photographer);
+                const dailyRate = photographer ? photographer.rate : 0;
+                let earnings = 0;
+                
+                if (record.status === 'Present') {
+                    earnings = dailyRate;
+                } else if (record.status === 'Half-Day') {
+                    earnings = dailyRate / 2;
+                }
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${record.photographer}</td>
+                    <td>${new Date(record.date).toLocaleDateString()}</td>
+                    <td><span class="status-indicator ${record.status === 'Present' ? 'status-connected' : record.status === 'Half-Day' ? 'status-warning' : 'status-disconnected'}">${record.status}</span></td>
+                    <td>₹${dailyRate.toLocaleString()}</td>
+                    <td>₹${earnings.toLocaleString()}</td>
+                    <td>${record.notes}</td>
+                    <td>
+                        <button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px;" onclick="deleteAttendance(${record.id})">Delete</button>
                     </td>
                 `;
                 tbody.appendChild(row);
