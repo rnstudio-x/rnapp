@@ -1650,6 +1650,50 @@ function deleteExpense(id) {
             });
         }
 
+        //Search & Filter Option for Expense Record
+        document.getElementById('expenseFilterCategory').addEventListener('input', function() {
+            filterExpense();
+        });
+
+        document.getElementById('expenseFilterCategory').addEventListener('change', function() {
+            filterExpense();
+        });
+
+        function filterExpense() {
+            const searchTerm = document.getElementById('expenseFilterCategory').value.toLowerCase();
+            const filteredExpenses = expenses.filter(expense => 
+                expense.category.toLowerCase().includes(searchTerm)
+            );
+            displayFilteredExpenses(filteredExpenses);
+        }
+
+        function displayFilteredExpenses(filteredExpenses) {
+            const tbody = document.getElementById('expenseTableBody');
+            tbody.innerHTML = '';
+            
+            if (filteredExpenses.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #666;">No expense records found</td></tr>';
+                return;
+            }
+            
+            filteredExpenses.forEach(expense => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${new Date(expense.date).toLocaleDateString()}</td>
+                    <td>${expense.category}</td>
+                    <td>${expense.description}</td>
+                    <td>₹${expense.amount.toLocaleString()}</td>
+                    <td>${expense.paymentMode}</td>
+                    <td>${expense.remarks}</td>
+                    <td>
+                        <button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px;" onclick="deleteExpense(${expense.id})">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+
         // Google Sheets integration
         function connectGoogleSheets() {
     const url = document.getElementById('googleSheetUrl').value;
