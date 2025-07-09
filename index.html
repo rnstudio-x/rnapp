@@ -2531,272 +2531,270 @@ setInterval(() => {
     }
 }
 </script>
-<script>
+<script>// Mobile Navigation Functions
 // Mobile Navigation Functions
 function toggleMobileNav() {
     const navTabs = document.getElementById('navTabs');
     const mobileToggle = document.querySelector('.mobile-nav-toggle');
-    const overlay = document.querySelector('.mobile-overlay');
+    const mobileOverlay = document.querySelector('.mobile-overlay');
     
+    // Toggle navigation visibility
     navTabs.classList.toggle('mobile-open');
     mobileToggle.classList.toggle('active');
-    overlay.classList.toggle('active');
+    mobileOverlay.classList.toggle('active');
     
     // Prevent body scroll when menu is open
     if (navTabs.classList.contains('mobile-open')) {
         document.body.style.overflow = 'hidden';
     } else {
-        document.body.style.overflow = '';
+        document.body.style.overflow = 'auto';
     }
 }
 
 function closeMobileNav() {
     const navTabs = document.getElementById('navTabs');
     const mobileToggle = document.querySelector('.mobile-nav-toggle');
-    const overlay = document.querySelector('.mobile-overlay');
+    const mobileOverlay = document.querySelector('.mobile-overlay');
     
     navTabs.classList.remove('mobile-open');
     mobileToggle.classList.remove('active');
-    overlay.classList.remove('active');
-    document.body.style.overflow = '';
+    mobileOverlay.classList.remove('active');
+    document.body.style.overflow = 'auto';
 }
 
-// Enhanced showTab function that closes mobile menu
-function showTab(tabName) {
-    // Hide all tab contents
-    const tabContents = document.querySelectorAll('.tab-content');
-    tabContents.forEach(content => content.classList.remove('active'));
+// Store the original showTab function if it exists
+let originalShowTab = null;
+if (typeof window.showTab === 'function') {
+    originalShowTab = window.showTab;
+}
+
+// Override showTab to add mobile menu closing functionality
+window.showTab = function(tabName) {
+    // Call original showTab function if it exists
+    if (originalShowTab) {
+        originalShowTab(tabName);
+    } else {
+        // Fallback basic tab functionality
+        // Hide all tab contents
+        const tabContents = document.querySelectorAll('.tab-content');
+        tabContents.forEach(content => content.classList.remove('active'));
+        
+        // Remove active class from all nav tabs
+        const navTabs = document.querySelectorAll('.nav-tab');
+        navTabs.forEach(tab => tab.classList.remove('active'));
+        
+        // Show selected tab content
+        const selectedTab = document.getElementById(tabName);
+        if (selectedTab) {
+            selectedTab.classList.add('active');
+        }
+        
+        // Add active class to selected nav tab
+        const activeTab = document.querySelector(`[onclick="showTab('${tabName}')"]`);
+        if (activeTab) {
+            activeTab.classList.add('active');
+        }
+    }
     
-    // Remove active class from all nav tabs
-    const navTabs = document.querySelectorAll('.nav-tab');
-    navTabs.forEach(tab => tab.classList.remove('active'));
-    
-    // Show selected tab content
-    document.getElementById(tabName).classList.add('active');
-    
-    // Add active class to clicked nav tab
-    event.target.classList.add('active');
-    
-    // Close mobile menu when tab is selected
+    // Close mobile menu when tab is selected (mobile only)
     if (window.innerWidth <= 768) {
         closeMobileNav();
     }
-}
+};
 
-// Swipe gesture support for mobile
-let touchStartX = 0;
-let touchStartY = 0;
-let touchEndX = 0;
-let touchEndY = 0;
-
-function handleTouchStart(event) {
-    touchStartX = event.changedTouches[0].screenX;
-    touchStartY = event.changedTouches[0].screenY;
-}
-
-function handleTouchEnd(event) {
-    touchEndX = event.changedTouches[0].screenX;
-    touchEndY = event.changedTouches[0].screenY;
-    handleSwipe();
-}
-
-function handleSwipe() {
-    const swipeThreshold = 50;
-    const swipeDistance = touchEndX - touchStartX;
-    const verticalDistance = Math.abs(touchEndY - touchStartY);
-    
-    // Only trigger swipe if horizontal movement is greater than vertical
-    if (Math.abs(swipeDistance) > verticalDistance) {
-        const navTabs = document.getElementById('navTabs');
-        
-        // Swipe from left edge to open menu
-        if (swipeDistance > swipeThreshold && touchStartX < 50 && !navTabs.classList.contains('mobile-open')) {
-            toggleMobileNav();
-        }
-        
-        // Swipe right to left to close menu
-        if (swipeDistance < -swipeThreshold && navTabs.classList.contains('mobile-open')) {
-            closeMobileNav();
-        }
-    }
-}
-
-// Keyboard navigation support
-function handleKeyDown(event) {
-    const navTabs = document.getElementById('navTabs');
-    
-    // Close menu on Escape key
-    if (event.key === 'Escape' && navTabs.classList.contains('mobile-open')) {
-        closeMobileNav();
-    }
-    
-    // Toggle menu on Enter/Space when hamburger is focused
-    if ((event.key === 'Enter' || event.key === ' ') && 
-        document.activeElement.classList.contains('mobile-nav-toggle')) {
-        event.preventDefault();
-        toggleMobileNav();
-    }
-}
-
-// Resize handler to ensure proper behavior on orientation change
-function handleResize() {
+// Handle window resize to ensure proper navigation state
+window.addEventListener('resize', function() {
     if (window.innerWidth > 768) {
+        // Desktop view - ensure mobile menu is closed
         closeMobileNav();
     }
+});
+
+// Handle escape key to close mobile menu
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && window.innerWidth <= 768) {
+        closeMobileNav();
+    }
+});
+
+// Touch/Swipe functionality for mobile tables
+function initializeMobileTableSwipe() {
+    const tables = document.querySelectorAll('.table-responsive');
+    
+    tables.forEach(table => {
+        // Skip if already initialized
+        if (table.hasAttribute('data-swipe-initialized')) {
+            return;
+        }
+        table.setAttribute('data-swipe-initialized', 'true');
+        
+        let isDown = false;
+        let startX;
+        let scrollLeft;
+        
+        // Mouse events for desktop testing
+        table.addEventListener('mousedown', (e) => {
+            if (window.innerWidth > 768) return; // Only on mobile
+            isDown = true;
+            table.style.cursor = 'grabbing';
+            startX = e.pageX - table.offsetLeft;
+            scrollLeft = table.scrollLeft;
+            e.preventDefault();
+        });
+        
+        table.addEventListener('mouseleave', () => {
+            isDown = false;
+            table.style.cursor = 'grab';
+        });
+        
+        table.addEventListener('mouseup', () => {
+            isDown = false;
+            table.style.cursor = 'grab';
+        });
+        
+        table.addEventListener('mousemove', (e) => {
+            if (!isDown || window.innerWidth > 768) return;
+            e.preventDefault();
+            const x = e.pageX - table.offsetLeft;
+            const walk = (x - startX) * 1.5;
+            table.scrollLeft = scrollLeft - walk;
+        });
+        
+        // Touch events for mobile
+        table.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].pageX - table.offsetLeft;
+            scrollLeft = table.scrollLeft;
+        }, { passive: true });
+        
+        table.addEventListener('touchmove', (e) => {
+            if (!startX) return;
+            const x = e.touches[0].pageX - table.offsetLeft;
+            const walk = (x - startX) * 1.5;
+            table.scrollLeft = scrollLeft - walk;
+        }, { passive: true });
+        
+        table.addEventListener('touchend', () => {
+            startX = null;
+        }, { passive: true });
+        
+        // Add visual indicator for swipeable tables on mobile
+        if (window.innerWidth <= 768) {
+            table.style.cursor = 'grab';
+        }
+    });
 }
 
-// Initialize event listeners when DOM is loaded
+// Initialize mobile table swipe when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    // Touch events for swipe gestures
-    document.addEventListener('touchstart', handleTouchStart, false);
-    document.addEventListener('touchend', handleTouchEnd, false);
+    // Small delay to ensure all elements are loaded
+    setTimeout(() => {
+        initializeMobileTableSwipe();
+    }, 100);
     
-    // Keyboard navigation
-    document.addEventListener('keydown', handleKeyDown);
-    
-    // Resize handler
-    window.addEventListener('resize', handleResize);
-    
-    // Make hamburger button focusable for keyboard navigation
-    const mobileToggle = document.querySelector('.mobile-nav-toggle');
-    if (mobileToggle) {
-        mobileToggle.setAttribute('tabindex', '0');
-        mobileToggle.setAttribute('aria-label', 'Toggle navigation menu');
-        mobileToggle.setAttribute('aria-expanded', 'false');
-    }
-    
-    // Update aria-expanded attribute when menu state changes
-    const originalToggleFunction = window.toggleMobileNav;
-    window.toggleMobileNav = function() {
-        originalToggleFunction();
-        const navTabs = document.getElementById('navTabs');
-        const mobileToggle = document.querySelector('.mobile-nav-toggle');
-        
-        if (mobileToggle) {
-            mobileToggle.setAttribute('aria-expanded', 
-                navTabs.classList.contains('mobile-open') ? 'true' : 'false');
-        }
-    };
-    
-    // Smooth scrolling prevention during menu animation
-    const navTabs = document.getElementById('navTabs');
-    if (navTabs) {
-        navTabs.addEventListener('transitionstart', function() {
-            if (window.innerWidth <= 768) {
-                document.body.style.overflow = 'hidden';
+    // Re-initialize when new tables are added dynamically
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'childList') {
+                mutation.addedNodes.forEach(function(node) {
+                    if (node.nodeType === 1) { // Element node
+                        // Check if the added node or its children contain tables
+                        const tables = node.querySelectorAll ? node.querySelectorAll('.table-responsive') : [];
+                        if (tables.length > 0 || node.classList?.contains('table-responsive')) {
+                            setTimeout(() => {
+                                initializeMobileTableSwipe();
+                            }, 50);
+                        }
+                    }
+                });
             }
-        });
-        
-        navTabs.addEventListener('transitionend', function() {
-            if (!navTabs.classList.contains('mobile-open')) {
-                document.body.style.overflow = '';
-            }
-        });
-    }
-    
-    // Enhanced tab switching with smooth transitions
-    const navButtons = document.querySelectorAll('.nav-tab');
-    navButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            const tabName = this.getAttribute('onclick').match(/'([^']+)'/)[1];
-            showTab(tabName);
         });
     });
     
-    // Auto-close menu when clicking outside on mobile
-    document.addEventListener('click', function(event) {
-        const navTabs = document.getElementById('navTabs');
-        const mobileToggle = document.querySelector('.mobile-nav-toggle');
-        
-        if (window.innerWidth <= 768 && 
-            navTabs.classList.contains('mobile-open') && 
-            !navTabs.contains(event.target) && 
-            !mobileToggle.contains(event.target)) {
-            closeMobileNav();
-        }
-    });
-    
-    // Prevent menu from staying open on orientation change
-    window.addEventListener('orientationchange', function() {
-        setTimeout(function() {
-            if (window.innerWidth > 768) {
-                closeMobileNav();
-            }
-        }, 100);
-    });
-    
-    // Performance optimization: debounce resize events
-    let resizeTimeout;
-    window.addEventListener('resize', function() {
-        clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(handleResize, 150);
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
     });
 });
 
-// Additional utility functions for enhanced UX
-function isMobileMenuOpen() {
-    return document.getElementById('navTabs').classList.contains('mobile-open');
-}
-
-function getMobileBreakpoint() {
-    return 768;
-}
-
-function isMobileView() {
-    return window.innerWidth <= getMobileBreakpoint();
-}
-
-// Focus management for accessibility
-function trapFocus(element) {
-    const focusableElements = element.querySelectorAll(
-        'a, button, textarea, input, select, [tabindex]:not([tabindex="-1"])'
-    );
-    
-    if (focusableElements.length === 0) return;
-    
-    const firstFocusable = focusableElements[0];
-    const lastFocusable = focusableElements[focusableElements.length - 1];
-    
-    element.addEventListener('keydown', function(e) {
-        if (e.key === 'Tab') {
-            if (e.shiftKey) {
-                if (document.activeElement === firstFocusable) {
-                    lastFocusable.focus();
-                    e.preventDefault();
-                }
-            } else {
-                if (document.activeElement === lastFocusable) {
-                    firstFocusable.focus();
-                    e.preventDefault();
-                }
-            }
-        }
-    });
-}
-
-// Initialize focus trap when menu opens
-document.addEventListener('DOMContentLoaded', function() {
-    const navTabs = document.getElementById('navTabs');
-    
-    const observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-                if (navTabs.classList.contains('mobile-open')) {
-                    trapFocus(navTabs);
-                    // Focus first menu item for better accessibility
-                    const firstMenuItem = navTabs.querySelector('.nav-tab');
-                    if (firstMenuItem) {
-                        setTimeout(() => firstMenuItem.focus(), 100);
-                    }
-                }
+// Enhanced mobile experience
+function enhanceMobileExperience() {
+    if (window.innerWidth <= 768) {
+        // Add smooth scrolling for mobile
+        document.documentElement.style.scrollBehavior = 'smooth';
+        
+        // Add momentum scrolling for iOS
+        document.body.style.webkitOverflowScrolling = 'touch';
+        
+        // Add visual feedback for table scrolling
+        const tables = document.querySelectorAll('.table-responsive');
+        tables.forEach(table => {
+            table.style.cursor = 'grab';
+            
+            // Add scroll indicators
+            const scrollIndicator = document.createElement('div');
+            scrollIndicator.style.cssText = `
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                background: rgba(255, 255, 255, 0.2);
+                padding: 4px 8px;
+                border-radius: 12px;
+                font-size: 10px;
+                color: rgba(255, 255, 255, 0.8);
+                pointer-events: none;
+                display: none;
+            `;
+            scrollIndicator.textContent = '← Swipe →';
+            
+            if (table.scrollWidth > table.clientWidth) {
+                table.style.position = 'relative';
+                table.appendChild(scrollIndicator);
+                scrollIndicator.style.display = 'block';
+                
+                // Hide indicator after 3 seconds
+                setTimeout(() => {
+                    scrollIndicator.style.display = 'none';
+                }, 3000);
             }
         });
-    });
-    
-    observer.observe(navTabs, {
-        attributes: true,
-        attributeFilter: ['class']
+    }
+}
+
+// Handle orientation change
+window.addEventListener('orientationchange', function() {
+    setTimeout(function() {
+        closeMobileNav();
+        initializeMobileTableSwipe();
+        enhanceMobileExperience();
+    }, 100);
+});
+
+// Prevent zoom on double tap for iOS (optional)
+let lastTouchEnd = 0;
+document.addEventListener('touchend', function(e) {
+    const now = (new Date()).getTime();
+    if (now - lastTouchEnd <= 300) {
+        e.preventDefault();
+    }
+    lastTouchEnd = now;
+}, false);
+
+// Initialize on load
+window.addEventListener('load', function() {
+    enhanceMobileExperience();
+});
+
+// Add click handlers to nav tabs to close mobile menu
+document.addEventListener('DOMContentLoaded', function() {
+    const navTabs = document.querySelectorAll('.nav-tab');
+    navTabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            if (window.innerWidth <= 768) {
+                setTimeout(() => {
+                    closeMobileNav();
+                }, 100);
+            }
+        });
     });
 });
     </script>
